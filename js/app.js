@@ -1769,7 +1769,9 @@
       render();
     };
     document.getElementById('menuUiSettings').onclick = () => { window.openUiSettingsPanel && window.openUiSettingsPanel(); };
-    document.getElementById('menuAbout').onclick = () => alert(APP_NAME + ' ' + APP_VERSION + '\n\nHTML+JS port.');
+    document.getElementById('menuAbout').onclick = function () {
+      window.openAboutPanel && window.openAboutPanel(APP_NAME, APP_VERSION);
+    };
     document.getElementById('menuLicense').onclick = function () {
       window.openLicensePanel && window.openLicensePanel();
     };

@@ -1304,3 +1304,33 @@ mark.search-hl {
 .coa-template-list li { padding: 6px 0; }
 .coa-template-list label { cursor: pointer; }
 .coa-template-list input[type="radio"] { margin-right: 8px; }
+
+/* About panel */
+.about-panel-content { line-height: 1.6; }
+.about-panel-content a { color: var(--accent); text-decoration: none; }
+.about-panel-content a:hover { color: var(--accent-hover); text-decoration: underline; }
+.about-panel-content h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 18px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.about-panel-content h3:first-of-type { margin-top: 12px; }
+.about-panel-content p { margin: 6px 0; }
+.about-panel-content ul {
+  margin: 6px 0 6px 20px;
+  padding: 0;
+}
+.about-panel-content ul li { margin: 3px 0; }
+.about-panel-content code {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.875em;
+}
+.about-disclaimer {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
