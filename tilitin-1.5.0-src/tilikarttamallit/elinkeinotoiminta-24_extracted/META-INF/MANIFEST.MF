@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Name: Elinkeinotoiminta (ALV 24%)
+Created-By: 1.6.0_27 (Sun Microsystems Inc.)
+

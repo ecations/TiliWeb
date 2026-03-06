@@ -125,7 +125,9 @@ function deleteCOAHeading(id) {
 
 /**
  * Applies a tilikarttamalli (chart of accounts template).
- * Replaces all accounts and COA headings. Does not remove documents/entries (but their account references may become invalid).
+ * Replaces all accounts and COA headings. Remaps existing entry accountId references
+ * by matching old account numbers to new account numbers so that existing vouchers
+ * remain intact after the template swap.
  * @param {string} templateId - e.g. 'ammatinharjoittaja'
  * @returns {boolean} true if applied
  */
@@ -134,6 +136,11 @@ function applyTilikarttamalli(templateId) {
   const accounts = Tilikarttamallit.getAccountsForTemplate(templateId);
   const headings = Tilikarttamallit.getHeadingsForTemplate(templateId);
   if (!accounts.length && !headings.length) return false;
+
+  // Build old-id → account-number map BEFORE wiping accounts so we can remap entries.
+  const oldIdToNumber = {};
+  getAccounts().forEach(a => { oldIdToNumber[a.id] = String(a.number); });
+
   saveJson('accounts', []);
   saveJson('coa_headings', []);
   localStorage.setItem(APP_KEY + 'seq_account', '0');
@@ -171,6 +178,25 @@ function applyTilikarttamalli(templateId) {
       level: h.level != null ? h.level : 0
     });
   });
+
+  // Remap entry accountId references: old id → account number → new id.
+  // Entries whose account number doesn't exist in the new template get accountId set to 0.
+  const entries = loadJson('entries', []);
+  let remapped = false;
+  entries.forEach(e => {
+    const num = oldIdToNumber[e.accountId];
+    if (num == null) return; // already 0 or unknown
+    const newId = numberToId[num];
+    if (newId != null && newId !== e.accountId) {
+      e.accountId = newId;
+      remapped = true;
+    } else if (newId == null) {
+      e.accountId = 0;
+      remapped = true;
+    }
+  });
+  if (remapped) saveJson('entries', entries);
+
   return true;
 }
 

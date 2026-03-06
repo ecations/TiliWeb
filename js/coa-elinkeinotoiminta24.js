@@ -1091,6 +1091,6 @@
   ];
 
   if (global.Tilikarttamallit && global.Tilikarttamallit.registerTemplate) {
-    global.Tilikarttamallit.registerTemplate("elinkeinotoiminta-24", "Elinkeinotoiminta (tÃ¤ysi KT, ALV 24%)", COA_ELINKEINOTOIMINTA_24_ACCOUNTS, COA_ELINKEINOTOIMINTA_24_HEADINGS);
+    global.Tilikarttamallit.registerTemplate("elinkeinotoiminta-24", "Elinkeinotoiminta (täysi KT, ALV 24%)", COA_ELINKEINOTOIMINTA_24_ACCOUNTS, COA_ELINKEINOTOIMINTA_24_HEADINGS);
   }
 })(typeof window !== "undefined" ? window : this);

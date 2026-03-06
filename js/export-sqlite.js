@@ -120,7 +120,11 @@
     try {
       SQL = await initSqlJs({
         locateFile: function (file) {
-          return 'js/vendor/' + file;
+          if (file.endsWith('.wasm') && typeof SQL_WASM_BASE64 !== 'undefined') {
+            return 'data:application/wasm;base64,' + SQL_WASM_BASE64;
+          }
+          var base = window.location.href.replace(/\/[^/]*$/, '/');
+          return base + 'js/vendor/' + file;
         }
       });
     } catch (e) {

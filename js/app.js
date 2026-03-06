@@ -893,7 +893,6 @@
     if (!state.document || !isDocumentEditable()) return;
     const idx = state.selectedEntryIndex;
     if (idx == null || idx < 0 || idx >= state.entries.length) {
-      alert('Valitse ensin kopioitava vienti (klikkaa riviä).');
       return;
     }
     const e = state.entries[idx];
@@ -911,7 +910,6 @@
   function pasteEntries() {
     if (!state.document || !isDocumentEditable()) return;
     if (!state.entriesClipboard || state.entriesClipboard.length === 0) {
-      alert('Ei kopioituja vientejä. Kopioi ensin vienti (Muokkaa → Kopioi valittu vienti).');
       return;
     }
     state.entriesClipboard.forEach(clip => {

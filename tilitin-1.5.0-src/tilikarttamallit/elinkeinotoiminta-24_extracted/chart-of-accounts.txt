@@ -1,0 +1,1278 @@
+1278
+A;1001;Perustamismenot;0
+A;1011;Tutkimusmenot;0
+A;1021;Kehittämismenot;0
+A;1031;Patentit;0
+A;1033;Tekijänoikeudet;0
+A;1035;Tavaramerkkioikeudet;0
+A;1037;Lisenssimaksut;0
+A;1039;Toimilupaoikeudet;0
+A;1041;Atk-ohjelmien lisenssimaksut;0
+A;1043;Puhelinliittymät;0
+A;1045;Hälytysliittymät;0
+A;1049;Muut aineettomat oikeudet;0
+A;1051;Liikearvo;0
+A;1055;Fuusiotili;0
+A;1057;Fuusioaktiiva;0
+A;1061;Konserniliikearvo;0
+A;1071;Mainos- ja markkinatutkimusmenot;0
+A;1073;Osakehuoneiston perusparannusmenot;0
+A;1075;Vuokrahuoneiston perusparannusmenot;0
+A;1081;Atk-ohjelmat;0
+A;1089;Muut pitkävaikutteiset menot;0
+A;1091;Ennakkomaksut aineettomista hyödykkeistä;0
+A;1101;Maa- ja vesialueet;0
+A;1105;Liittymismaksut;0
+A;1109;Arvonkorotukset maa- ja vesialueista;0
+A;1111;Maanvuokraoikeudet;0
+A;1113;Liittymismaksut vuokrakiinteistöistä;0
+A;1121;Rakennukset 7% menojäännöspoisto;0
+A;1125;Rakennukset 4% menojäännöspoisto;0
+A;1131;Rakennusten tekniset laitteet  25% menojäännöspoisto;0
+A;1135;Väestönsuojat ym. max. 25% tasapoisto;0
+A;1141;Rakennelmat 20% menojäännöspoisto;0
+A;1143;Muut rakennukset ja rakennelmat;0
+A;1145;Arvonkorotukset (vanhat rakennuksista tehdyt);0
+A;1151;Rakennusten vuokraoikeudet;0
+A;1161;Koneet ja laitteet;0
+A;1165;Tuotannon koneet ja laitteet;0
+A;1171;Kuorma- ja pakettiautot;0
+A;1173;Henkilöautot;0
+A;1175;Ammattiautot;0
+A;1179;Muut ajoneuvot ja alukset;0
+A;1201;Kalusto ja muu irtain;0
+A;1209;Vuokrattava kalusto;0
+A;1211;Vapaa-ajan asuntojen kalusto ja muu irtaimisto;0
+A;1213;Työsuhdeasuntojen kalusto ja muu irtaimisto;0
+A;1241;Käyttöönottamattomat koneet ja kalusto;0
+A;1249;Muut koneet ja kalusto;0
+A;1301;Maa-ainesten ottopaikat;0
+A;1303;Maa- ja vesirakennukset;0
+A;1305;Piha-asfaltit;0
+A;1315;Elävä käyttöomaisuus;0
+A;1329;Muut poistokelpoiset aineelliset hyödykkeet;0
+A;1331;Taide-esineet;0
+A;1335;Keräilyhyödykkeet;0
+A;1339;Muut aineelliset hyödykkeet (ei poistokelpoiset);0
+A;1381;Ennakkomaksut aineellisista hyödykkeistä;0
+A;1391;Keskeneräiset käyttöomaisuushankinnat;0
+A;1401;Tytäryritysten osakkeet;0
+A;1403;Emoyrityksen osakkeet;0
+A;1405;Sisaryritysten osakkeet;0
+A;1407;Muut konserniosuudet;0
+A;1409;Arvonkorotus konserniosuuksista;0
+A;1411;Pitkäaikaiset saamiset saman konsernin yrityksiltä;0
+A;1413;Konserniyrityksille annetut pääomalainat;0
+A;1421;Osakkuusyritysten osakkeet;0
+A;1423;Osakkuusyritysosuudet;0
+A;1425;Muut omistusyhteysyritysosakkeet;0
+A;1427;Muut omistusyhteysyritysosuudet;0
+A;1429;Arvonkorotus omistusyhteysyritysosuuksista;0
+A;1431;Pitkäaikaiset saamiset omistusyhteysyrityksiltä;0
+A;1441;Huoneisto-osakkeet;0
+A;1447;Pörssiosakkeet;0
+A;1453;Muut osakkeet;0
+A;1457;Pankkiosuudet;0
+A;1461;Sijoitusrahasto-osuudet;0
+A;1465;Puhelinosuudet;0
+A;1467;Muut osuudet;0
+A;1469;Arvonkorotus muista  osakkeista ja osuuksista;0
+A;1471;Pitkäaikaiset lainasaamiset;0
+A;1473;Pitkäaikaiset joukkovelkakirjalainat;0
+A;1475;Pitkäaikaiset saamistodistukset;0
+A;1477;Pitkäaikaiset optiolainat;0
+A;1479;Pitkäaikaiset vaihtovelkakirjalainat;0
+A;1481;Pitkäaikaiset nollakorkolainat;0
+A;1483;Liittymismaksusaamiset;0
+A;1489;Muut pitkäaikaiset saamiset;0
+A;1491;OYJ:n (pörssinoteerattu) omat osakkeet;0
+A;1501;Aineet ja tarvikkeet;0
+A;1511;Keskeneräiset tuotteet;0
+A;1521;Valmiit tuotteet;0
+A;1531;Tavarat;0
+A;1533;Matkalla olevat tavarat;0
+A;1541;Kiinteistöt;0
+A;1543;Arvopaperit;0
+A;1549;Muu vaihto-omaisuus;0
+A;1551;Ennakkomaksut vaihto-omaisuudesta;0
+A;1601;Pitkäaikaiset myyntisaamiset;0
+A;1621;Pitkäaikaiset valuuttamääräiset myyntisaamiset;0
+A;1623;Pitkäaikaiset osamaksusaamiset;0
+A;1631;Pitkäaikaiset konsernimyyntisaamiset;0
+A;1633;Pitkäaikaiset konsernisiirtosaamiset;0
+A;1635;Pitkäaikaiset konsernilainasaamiset;0
+A;1639;Pitkäaikaiset muut konsernisaamiset;0
+A;1641;Pitkäaikaiset omistusyhteysyritysmyyntisaamiset;0
+A;1643;Pitkäaikaiset omistusyhteysyrityssiirtosaamiset;0
+A;1645;Pitkäaikaiset omistusyhteysyrityslainasaamiset;0
+A;1649;Pitkäaikaiset muut omistusyhteysyrityssaamiset;0
+A;1651;Pitkäaikaiset saamiset työntekijöiltä;0
+A;1653;Pitkäaikaiset saamiset johdolta;0
+A;1655;Pitkäaikaiset saamiset osakkailta ja omaisilta;0
+A;1656;Pitkäaikaiset saamiset osakkailta ja omaisilta (veronalaiset);0
+A;1657;Pitkäaikaiset muut lähipiirilainat;0
+A;1659;Pitkäaikaiset muut lainasaamiset;0
+A;1665;Pitkäaikaiset vakuustalletukset;0
+A;1667;Pitkäaikaiset maksetut vuokravakuudet;0
+A;1669;Pitkäaikaiset muut saamiset;0
+A;1671;Pitkäaikaiset maksamattomat osakkeet / osuudet;0
+A;1681;Pitkäaikaiset siirtosaamiset;0
+A;1691;Pitkäaikaiset laskennalliset verosaamiset;0
+A;1701;Myyntisaamiset 1;0
+A;1702;Myyntisaamiset 2;0
+A;1703;Myyntisaamiset 3;0
+A;1705;Myymäläsaamiset;0
+A;1707;Provisiosaamiset;0
+A;1711;Luottokorttisaamiset;0
+A;1713;Pankkikorttisaamiset;0
+A;1715;Myyntisaamiset ennakkolaskuista;0
+A;1717;Factoring-myyntisaamiset matkalla;0
+A;1718;Factoring-myyntisaamiset laskutili;0
+A;1719;Factoring-osamaksusaamiset;0
+A;1721;Myyntisaamiset, valuuttamääräiset;0
+A;1723;Osamaksusaamiset;0
+A;1727;Siirtyvät myyntisaamiset/selvittelytili;0
+A;1729;Muut myyntisaamiset;0
+A;1731;Konsernimyyntisaamiset;0
+A;1733;Konsernisiirtosaamiset;0
+A;1735;Konsernilainasaamiset;0
+A;1739;Muut konsernisaamiset;0
+A;1741;Omistusyhteysyritysmyyntisaamiset;0
+A;1743;Omistusyhteysyrityssiirtosaamiset;0
+A;1745;Omistusyhteysyrityslainasaamiset;0
+A;1749;Muut omistusyhteysyrityssaamiset;0
+A;1751;Saamiset työntekijöiltä;0
+A;1753;Saamiset johdolta;0
+A;1755;Saamiset osakkailta ja omaisilta;0
+A;1756;Saamiset osakkailta ja omaisilta (veronalaiset);0
+A;1757;Muut lähipiirilainat;0
+A;1759;Muut lainasaamiset;0
+A;1761;Verosaamiset;0
+A;1763;Arvonlisäverosaamiset;0
+A;1764;Anotut arvonlisäveropalautukset;0
+A;1765;Vakuustalletukset;0
+A;1767;Maksetut vuokravakuudet;0
+A;1769;Kuluennakot työntekijöille;0
+A;1771;Vahingonkorvaussaamiset;0
+A;1777;Selvittelytili;0
+A;1779;Muut saamiset;0
+A;1781;Osakemerkintäsaamiset;0
+A;1783;Maksamattomat osuudet;0
+A;1801;Palkkamenot (siirtosaamiset);0
+A;1803;Eläkevakuutusmaksut (siirtosaamiset);0
+A;1804;Sosiaaliturvamaksut (siirtosaamiset);0
+A;1805;Työnantajan pakolliset vakuutusmaksut (siirtosaamiset);0
+A;1809;Vuokramenot (siirtosaamiset);0
+A;1811;Korkomenot (siirtosaamiset);0
+A;1813;Tuloverot (siirtosaamiset);0
+A;1819;Muut menoennakot (siirtosaamiset);0
+A;1831;Vuokratulot (siirtosaamiset);0
+A;1833;Korkotulot (siirtosaamiset);0
+A;1837;Valmistusasteen mukaiset tulot (siirtosaamiset);0
+A;1839;Muut tulojäämät (siirtosaamiset);0
+A;1841;Ostojen alennukset (siirtosaamiset);0
+A;1843;Laskennalliset kurssitappiot (siirtosaamiset);0
+A;1845;Arvonlisäverosaamiset ennakkomaksuista (siirtosaamiset);0
+A;1847;Veronhyvityssaamiset (siirtosaamiset);0
+A;1849;Muut siirtosaamiset;0
+A;1851;Laskennalliset verosaamiset;0
+A;1861;Tytäryritysten osakkeet (rahoitusomaisuus);0
+A;1863;Emoyrityksen osakkeet (rahoitusomaisuus);0
+A;1865;Sisaryritysten osakkeet (rahoitusomaisuus);0
+A;1867;Muut konserniosuudet (rahoitusomaisuus);0
+A;1871;OYJ:n (pörssinoteerattu) omat osakkeet (rahoitusomaisuus);0
+A;1881;Muut osakkeet ja osuudet (rahoitusomaisuus);0
+A;1891;Muut rahoitusarvopaperit;0
+A;1900;Käteisvarat;0
+A;1905;Valuuttakassat;0
+A;1910;Pankkitili 1;0
+A;1919;Pankkitili 1 shekkitililimiitti;0
+A;1920;Pankkitili 2;0
+A;1929;Pankkitili 2 shekkitililimiitti;0
+A;1930;Pankkitili 3;0
+A;1940;Pankkitili 4;0
+A;1950;Pankkitili 5;0
+A;1960;Lyhytaikaiset talletukset;0
+A;1961;Lyhytaikaiset lähdeveronalaiset talletukset;0
+A;1970;Sijoitustili;0
+A;1984;Valuuttatili;0
+A;1986;Valuuttatalletukset;0
+A;1991;Täsmäytykset;0
+A;1995;Rahansiirrot matkalla;0
+A;1996;Virhemaksut;0
+A;2001;Osakepääoma;2
+A;2011;Osakeanti;2
+A;2021;Ylikurssirahasto;2
+A;2031;Arvonkorotusrahasto;2
+A;2051;Vararahasto;2
+A;2061;Yhtiöjärjestyksen mukainen rahasto;2
+A;2071;Muut rahastot;2
+A;2101;Osuuspääoma;2
+A;2103;Lisäosuuspääoma;2
+A;2151;Pääomapanos, yhtiömies A;2
+A;2153;Pääomapanos, yhtiömies B;2
+A;2181;Äänettömän yhtiömiehen C panos;2
+A;2183;Äänettömän yhtiömiehen D panos;2
+A;2201;Peruspääoma (tmi);2
+A;2251;Edellisten tilikausien voitto/tappio;5
+A;2261;Osingonjako;2
+A;2265;Omista osakkeista maksettu määrä;2
+A;2271;Osuuskorot;2
+A;2291;Voitto-osuus yhtiömies A;2
+A;2293;Voitto-osuus yhtiömies B;2
+A;2311;Voitto-osuus vastuunalainen yhtiömies A;2
+A;2313;Voitto-osuus vastuunalainen yhtiömies B;2
+A;2321;Voitto-osuus äänetön yhtiömies C;2
+A;2323;Voitto-osuus äänetön yhtiömies D;2
+A;2331;Pääomavajaus;2
+A;2341;Yksityissijoitukset rahana yhtiömies A;2
+A;2343;Muut yksityissijoitukset yhtiömies A;2
+A;2345;Yksityissijoitukset rahana yhtiömies B;2
+A;2347;Muut yksityissijoitukset  yhtiömies B;2
+A;2351;Yksityisnostot rahana yhtiömies A;2
+A;2353;Muut yksityisnostot yhtiömies A;2
+A;2355;Yksityisnostot rahana yhtiömies B;2
+A;2357;Muut yksityisnostot  yhtiömies B;2
+A;2361;Yksityissijoitukset rahana;2
+A;2363;Muut yksityissijoitukset;2
+A;2365;Yksityisnostot rahana;2
+A;2367;Muut yksityisnostot;2
+A;2381;Pääomalaina;1
+A;2401;Perustamismenojen poistoero;1
+A;2403;Tutkimusmenojen poistoero;1
+A;2405;Kehittämismenojen poistoero;1
+A;2407;Aineettomien oikeuksien poistoero;1
+A;2411;Liikearvon poistoero;1
+A;2421;Muiden pitkävaikutteisten menojen poistoero;1
+A;2431;Rakennusten poistoero;1
+A;2441;Koneiden ja kaluston poistoero;1
+A;2449;Muiden aineellisten hyödykkeiden poistoero;1
+A;2451;Käyttöomaisuuden jälleenhankintavaraus;1
+A;2453;Toimitilan jälleenhankintavaraus;1
+A;2461;Luottotappiovaraus;1
+A;2471;Takuuvaraus;1
+A;2481;Toimintavaraus;1
+A;2491;Hankintamenon muutosvaraus;1
+A;2493;Asuintalovaraus;1
+A;2499;Muut vapaaehtoiset varaukset;1
+A;2501;Eläkevaraukset;1
+A;2531;Verovaraukset;1
+A;2551;Oikeudenkäyntivaraus;1
+A;2561;Hinnanlaskuvaraus;1
+A;2571;Pitkäaikaishankkeiden pakolliset varaukset;1
+A;2581;Muut pakolliset varaukset;1
+A;2591;Konsernireservi;1
+A;2601;Pitkäaikaiset joukkovelkakirjalainat;1
+A;2603;Pitkäaikaiset obligaatiolainat;1
+A;2605;Pitkäaikaiset debentuurilainat;1
+A;2609;Muut joukkovelkakirjalainat;1
+A;2611;Pitkäaikaiset vaihtovelkakirjalainat;1
+A;2621;Pitkäaikainen rahoituslaitoslaina 1;1
+A;2622;Pitkäaikainen rahoituslaitoslaina 2;1
+A;2623;Pitkäaikainen rahoituslaitoslaina 3;1
+A;2631;Pitkäaikainen rahoitusyhtiölaina 1;1
+A;2632;Pitkäaikainen rahoitusyhtiölaina 2;1
+A;2633;Pitkäaikainen rahoitusyhtiölaina 3;1
+A;2639;Pitkäaikainen factoringluottotili;1
+A;2641;Pankki 1 shekkitililimiitti;1
+A;2642;Pankki 2 shekkitililimiitti;1
+A;2649;Muut pitkäaikaiset lainat rahoituslaitoksilta;1
+A;2651;Pitkäaikaiset eläkelainat;1
+A;2661;Pitkäaikaiset saadut ennakot;1
+A;2671;Pitkäaikaiset ostovelat;1
+A;2681;Pitkäaikaiset osamaksuvelat;1
+A;2691;Pitkäaikaiset rahoitusvekselit;1
+A;2701;Pitkäaikaiset saadut ennakot konserniyrityksiltä;1
+A;2703;Pitkäaikaiset ostovelat konserniyrityksille;1
+A;2705;Pitkäaikaiset rahoitusvekselit konserniyrityksiltä;1
+A;2707;Pitkäaikaiset muut velat konserniyrityksille;1
+A;2709;Pitkäaikaiset siirtovelat konserniyrityksille;1
+A;2711;Pitkäaikaiset saadut ennakot omistusyhteysyrityksiltä;1
+A;2713;Pitkäaikaiset ostovelat omistusyhteysyrityksiltä;1
+A;2715;Pitkäaikaiset rahoitusvekselit omistusyhteysyrityksiltä;1
+A;2717;Pitkäaikaiset muut velat omistusyhteysyrityksiltä;1
+A;2719;Pitkäaikaiset siirtovelat omistusyhteysyrityksiltä;1
+A;2721;Pitkäaikaiset velat työntekijöille;1
+A;2723;Pitkäaikaiset velat johdolle;1
+A;2725;Pitkäaikaiset velat osakkaille;1
+A;2731;Pitkäaikaiset optiolainat;1
+A;2741;Pitkäaikaiset saadut vuokravakuudet;1
+A;2749;Pitkäaikaiset muut velat;1
+A;2751;Pitkäaikaiset siirtovelat;1
+A;2771;Pitkäaikaiset laskennalliset verovelat;1
+A;2801;Joukkovelkakirjalainat;1
+A;2803;Obligaatiolainat;1
+A;2805;Debentuurilainat;1
+A;2809;Muut joukkovelkakirjalainat;1
+A;2811;Vaihtovelkakirjalainat;1
+A;2821;Pitkäaikaisen rahoituslaitoslainan 1 lyhennyserät;1
+A;2822;Pitkäaikaisen rahoituslaitoslainan 2 lyhennyserät;1
+A;2823;Pitkäaikaisen rahoituslaitoslainan 3 lyhennyserät;1
+A;2825;Lyhytaikainen rahoituslaitoslaina 1;1
+A;2826;Lyhytaikainen rahoituslaitoslaina 2;1
+A;2827;Lyhytaikainen rahoituslaitoslaina 3;1
+A;2831;Pitkäaikaisen rahoitusyhtiölainan 1 lyhennyserät;1
+A;2832;Pitkäaikaisen rahoitusyhtiölainan 2 lyhennyserät;1
+A;2833;Pitkäaikaisen rahoitusyhtiölainan 3 lyhennyserät;1
+A;2835;Lyhytaikainen rahoitusyhtiölaina 1;1
+A;2836;Lyhytaikainen rahoitusyhtiölaina 2;1
+A;2837;Lyhytaikainen rahoitusyhtiölaina 3;1
+A;2841;Factoring-luottotili;1
+A;2849;Muut lyhytaikaiset lainat rahoituslaitoksilta;1
+A;2851;Lyhytaikaiset eläkelainat;1
+A;2861;Saadut ennakot;1
+A;2871;Ostovelat 1;1
+A;2872;Ostovelat 2;1
+A;2873;Ostovelat 3;1
+A;2877;Ostovelat investoinneista;1
+A;2879;Ostovelat ennakkolaskuista;1
+A;2881;Osamaksuvelat;1
+A;2888;Maksuliikennetili;1
+A;2889;Muut ostovelat;1
+A;2891;Rahoitusvekselit;1
+A;2901;Saadut ennakot konserniyrityksiltä;1
+A;2903;Ostovelat konserniyrityksille;1
+A;2905;Rahoitusvekselit konserniyrityksiltä;1
+A;2907;Muut velat konserniyrityksille;1
+A;2909;Siirtovelat konserniyrityksille;1
+A;2911;Saadut ennakot omistusyhteysyrityksiltä;1
+A;2913;Ostovelat omistusyhteysyrityksille;1
+A;2915;Rahoitusvekselit omistusyhteysyrityksiltä;1
+A;2917;Muut velat omistusyhteysyrityksille;1
+A;2919;Siirtovelat omistusyhteysyrityksille;1
+A;2921;Ennakonpidätysvelka;1
+A;2923;Sosiaaliturvamaksuvelka;1
+A;2925;Jäsenmaksutilitysvelka 1;1
+A;2926;Jäsenmaksutilitysvelka 2;1
+A;2927;Jäsenmaksutilitysvelka 3;1
+A;2931;TyEL-velka;1
+A;2933;Ulosottotilitysvelka;1
+A;2935;Tilitysvelat;1
+A;2937;Maksuunpantu verovelka;1
+A;2938;Maksuunpantu ennakkoverovelka;1
+A;2939;Arvonlisäverovelka;1
+A;29391;Alv myynnistä;1
+A;29392;Alv ostoista;1
+A;29393;Alv suoritettava EU-ostoista;1
+A;29394;Alv vähennettävä EU-ostoista;1
+A;29395;Alv suoritettava rak.palveluista;1
+A;29396;Alv vähennettävä rak.palveluista;1
+A;2940;Velat työntekijöille;1
+A;2941;Velat osakkaille;1
+A;2942;Velat johdolle;1
+A;2943;Voitonjakovelat;1
+A;2944;Optiolainat;1
+A;2945;Saadut vuokravakuudet;1
+A;2947;Selvittelytili;1
+A;2949;Muut lyhytaikaiset velat;1
+A;2951;Vuokratulot (siirtovelat);1
+A;2953;Korkotulot (siirtovelat);1
+A;2955;Jaksotetut investointiavustukset (siirtovelat);1
+A;2959;Muut tuloennakot (siirtovelat);1
+A;2961;Palkkamenot (siirtovelat);1
+A;2962;Lomapalkkamenot (siirtovelat);1
+A;2963;Eläkevakuutusmaksut (siirtovelat);1
+A;2964;Sosiaaliturvamaksut (siirtovelat);1
+A;2965;Työnantajan pakolliset vakuutusmaksut (siirtovelat);1
+A;2966;Vuokramenot (siirtovelat);1
+A;2967;Korkomenot (siirtovelat);1
+A;2968;Tuloverot (siirtovelat);1
+A;2969;Muut menojäämät (siirtovelat);1
+A;2971;Myynnin alennukset (siirtovelat);1
+A;2973;Vastaiset menot ja menetykset (siirtovelat);1
+A;2975;Laskennalliset kurssivoitot (siirtovelat);1
+A;2977;Arvonlisäverovelat ennakkomaksuista (siirtovelat);1
+A;2979;Muut siirtovelat;1
+A;2981;Laskennalliset verovelat;1
+A;3000;Myynti;3
+A;3010;Myynti 2;3
+A;3020;Myynti 3;3
+A;3030;Myynti 4;3
+A;3040;Myynti 5;3
+A;3050;Myynti 6;3
+A;3060;Myynti 7;3
+A;3070;Myynti 8;3
+A;3080;Myynti 9;3
+A;3090;Myynti 10;3
+A;3110;Rakentamispalveluiden myynti (käänn. verovelv.);3
+A;3200;Puhelintuotot;3
+A;3210;Veikkaustuotot;3
+A;3220;Automaattituotot;3
+A;3230;Muut oheispalvelutuotot;3
+A;3250;Laskutuslisät;3
+A;3260;Kuljetusvakuutukset;3
+A;3270;Kuljetusveloitukset;3
+A;3280;Muut toimitusveloitukset;3
+A;3290;Osamaksulisät;3
+A;3300;Komissiomyynti;3
+A;3310;Komissio-ostot;3
+A;3320;Välityspalvelutuotot;3
+A;3330;Tavaramyynti Ahvenanmaalle;3
+A;3350;Yhteisömyynti EMU-maat;3
+A;3360;Yhteisömyynti muut EU-maat;3
+A;3370;Kolmikantamyynti;3
+A;3380;Myynti yhteisön ulkopuolelle;3
+A;3390;Palveluiden myynti EU-maihin;3
+A;3400;Myynti käytetyt tavarat;3
+A;3410;Myynti käytetyt tavarat marginaalimenettely;3
+A;3420;Myynti taide-, keräily- ja antiikkiesineet;3
+A;3430;Myynti taide-, keräily-ja antiikkiesineet marginaalimenettely;3
+A;3440;Kiinteistöjen myynti;3
+A;3450;Vuokratuotot;3
+A;3460;Arvopapereiden myynti;3
+A;3470;Osinkotuotot;3
+A;3480;Korkotuotot;3
+A;3490;Muut kiinteistö-  ja arvopaperituotot;3
+A;3500;Myynnin alennukset;4
+A;3510;Yhteisömyynnin alennukset EMU-maat;4
+A;3520;Yhteisömyynnin alennukset muut EU-maat;4
+A;3550;Apteekkimaksu;4
+A;3560;Muut välilliset verot;4
+A;3570;Maksut asiakkaan puolesta;4
+A;3580;Myynnin valuuttakurssierot;4
+A;3590;Muut myynnin oikaisuerät;4
+A;3600;Valmiiden tuotteiden varaston muutos;3
+A;3610;Keskeneräisten tuotteiden varaston muutos;3
+A;3620;Valmiiden ja keskeneräisten tuotteiden varastojen arvonalennus;3
+A;3630;Valmistus omaan käyttöön, aineettomat hyödykkeet;3
+A;3640;Valmistus omaan käyttöön, aineelliset hyödykkeet;3
+A;3650;Käyttöomaisuuden myyntivoitot;3
+A;3660;Myyntivoitto liiketoimintakaupoista;3
+A;3700;Leasinghyvitykset;3
+A;3710;Keskeytysvakuutuskorvaukset;3
+A;3720;Vakuutusten takaisinostoarvot;3
+A;3730;Saadut vahingonkorvaukset;3
+A;3750;Vuokratuotot kiinteistöistä;3
+A;3760;Vuokratuotot huoneistoista;3
+A;3770;Vuokratuotot henkilöstön virkistystiloista;3
+A;3780;Vuokratuotot koneista ja kalustosta;3
+A;3790;Muut vuokratuotot;3
+A;3800;Saadut avustukset;3
+A;3810;Saadut työllistämiskorvaukset;3
+A;3820;Saadut oppisopimuskorvaukset;3
+A;3840;Saadut tuet;3
+A;3850;Työvoiman vuokraustuotot;3
+A;3860;Kuljetuspalvelutuotot;3
+A;3870;Toimistopalvelutuotot;3
+A;3880;Tietoliikennepalvelutuotot;3
+A;3890;Muut palvelutuotot;3
+A;3900;Rojaltit;3
+A;3910;Provisiot;3
+A;3920;Lisenssimaksut;3
+A;3930;Asiamiespalkkiot;3
+A;3950;Muut palkkiot ja korvaukset;3
+A;3980;Fuusiovoitto;3
+A;3990;Muut liiketoiminnan muut tuotot;3
+A;4000;Ostot;4
+A;4010;Ostot 2;4
+A;4020;Ostot 3;4
+A;4030;Ostot 4;4
+A;4040;Ostot 5;4
+A;4050;Ostot 6;4
+A;4060;Ostot 7;4
+A;4070;Ostot välitysmyynti;4
+A;4080;Ostot, ostaja verovelvollinen;4
+A;4090;Tavaraostot Ahvenanmaalta;4
+A;4100;Verot ja muut maksut Ahvenanmaan maahantuonnissa;4
+A;4110;Yhteisöhankinnat;4
+A;4120;Välittäjän kolmikantaosto;4
+A;4130;Ostot tuonti;4
+A;4140;Tullit, verot ja muut maksut tullattaessa;4
+A;4150;Ostot käytetyt tavarat;4
+A;4160;Ostot käytetyt tavarat marginaalimenettely;4
+A;4170;Ostot taide, keräily- ja antiikkiesineet;4
+A;4180;Ostot taide, keräily- ja antiikkiesineet marginaalimenettely;4
+A;4200;Kiinteistöostot;4
+A;4210;Arvopapereiden ostot;4
+A;4220;Muut vaihto-omaisuusosakkeiden kulut;4
+A;4230;Ostojen alennukset;3
+A;4240;Yhteisöhankintojen alennukset;3
+A;4260;Palautetut tavarat ja päällykset;3
+A;4270;Saadut vahingonkorvaukset;3
+A;4280;Saadut avustukset materiaalihankintoihin;3
+A;4290;Ostorahdit;4
+A;4300;Yhteisökuljetus;4
+A;4310;Ostojen kuljetusvakuutusmaksut;4
+A;4320;Tuontihuolinta;4
+A;4330;Muut hankintakulut;4
+A;4340;Yksityiskäyttö;3
+A;4350;Liikkeen käyttö;3
+A;4360;Myynti henkilökunnalle;3
+A;4370;Ostojen valuuttakurssierot;4
+A;4380;Rakentamispalvelun oman käytön arvonlisävero;4
+A;4390;Muut ostojen oikaisuerät;4
+A;4400;Aine- ja tarvikevaraston muutos;4
+A;4410;Tavaravaraston muutos;4
+A;4420;Muun vaihto-omaisuusvaraston muutos;4
+A;4440;Aine-, tarvike-, tavara- ja muiden vaihto-omaisuusvarast. arvonalennus;4
+A;4450;Alihankinta 1;4
+A;4460;Alihankinta 2;4
+A;4470;Rakentamispalveluiden osto (käänn. verovelv.);4
+A;4475;Palveluiden osto EU-maista;4
+A;4480;Vuokrattu työvoima;4
+A;4490;Muut ulkopuoliset palvelut;4
+A;5000;Työntekijäpalkat;4
+A;5010;Kuukausipalkat;4
+A;5020;Tuntipalkat;4
+A;5050;Ulkomaan työskentelyn palkat;4
+A;5060;Palkat, lähdeveronalaiset;4
+A;5090;Palkkojen jaksotus;4
+A;5100;Ylityönlisät;4
+A;5110;Muut palkanlisät;4
+A;5120;Ennakonpidätyksen alaiset päivärahat;4
+A;5130;Muut ennakonpidätyksen alaiset korvaukset;4
+A;5170;Osapalkkiot;4
+A;5180;Kannustuspalkkiot;4
+A;5190;Lisien, korvausten ja palkkioiden jaksotus;4
+A;5200;Palkkiot;4
+A;5290;Palkkioiden jaksotus;4
+A;5300;Vuosilomapalkat;4
+A;5310;Vuosilomakorvaukset;4
+A;5320;Lomaltapaluurahat;4
+A;5330;Lomapalkkojen jaksotus;4
+A;5340;Sairausajan ja vanhempainvapaan palkat;4
+A;5350;Muut sosiaalipalkat;4
+A;5390;Sosiaalipalkkojen jaksotus;4
+A;5400;Asuntoedut;4
+A;5410;Ravintoedut;4
+A;5420;Autoedut;4
+A;5430;Puhelinedut;4
+A;5440;Muut luontoisedut;4
+A;5470;Saadut sairausvakuutuskorvaukset;3
+A;5480;Saadut tapaturmavakuutuskorvaukset;3
+A;5490;Korvausten jaksotus;4
+A;5600;Johdon palkat;4
+A;5610;Johdon osapalkkiot;4
+A;5620;Johdon vuosilomapalkat;4
+A;5630;Johdon vuosilomakorvaukset;4
+A;5640;Johdon lomaltapaluurahat;4
+A;5690;Johdon palkkojen jaksotus;4
+A;5700;Johdon asuntoedut;4
+A;5710;Johdon ravintoedut;4
+A;5720;Johdon autoedut;4
+A;5730;Johdon puhelinedut;4
+A;5740;Johdon muut luontoisedut;4
+A;5770;Saadut sairausvakuutuskorvaukset;3
+A;5780;Saadut tapaturmavakuutuskorvaukset;3
+A;5790;Korvausten jaksotus;4
+A;5800;Osakkaiden/omaisten palkat;4
+A;5810;Osakkaiden/omaisten osapalkkiot;4
+A;5820;Osakkaiden/omaisten vuosilomapalkat;4
+A;5830;Osakkaiden/omaisten vuosilomakorvaukset;4
+A;5840;Osakkaiden/omaisten lomaltapaluurahat;4
+A;5890;Osakkaiden/omaisten palkkojen jaksotus;4
+A;5900;Osakkaiden/omaisten asuntoedut;4
+A;5910;Osakkaiden/omaisten ravintoedut;4
+A;5920;Osakkaiden/omaisten autoedut;4
+A;5930;Osakkaiden/omaisten puhelinedut;4
+A;5940;Osakkaiden/omaisten muut luontoisedut;4
+A;5960;Saadut sairausvakuutuskorvaukset;3
+A;5970;Saadut tapaturmavakuutuskorvaukset;3
+A;5980;Korvausten jaksotus;4
+A;5990;Luontoisetujen vastatili;3
+A;6000;Maksetut eläkkeet;4
+A;6090;Eläkkeiden jaksotus;4
+A;6100;YEL-maksut;4
+A;6110;YEL-maksujen jaksotus;4
+A;6130;TyEL-maksut;4
+A;6140;Työntekijäin TyEL-maksut;4
+A;6150;TyEL-maksujen jaksotus;4
+A;6240;Vapaaehtoiset eläkevakuutusmaksut;4
+A;6250;Vapaaehtoisten eläkevakuutusmaksujen jaksotus;4
+A;6270;Muut pakolliset eläkevakuutusmaksut;4
+A;6280;Muiden pakollisten eläkevakuutusmaksujen jaksotus;4
+A;6290;Tilikauden aikainen jaksotus;4
+A;6300;Sosiaaliturvamaksut;4
+A;6390;Sosiaaliturvamaksujen jaksotus;4
+A;6400;Tapaturmavakuutusmaksut;4
+A;6410;Työttömyysvakuutusmaksut;4
+A;6420;Työntekijöiden työttömyysvakuutusmaksut;4
+A;6430;Ryhmähenkivakuutusmaksut;4
+A;6480;Muut pakolliset vakuutusmaksut;4
+A;6490;Pakollisten vakuutusmaksujen jaksotus;4
+A;6500;Henkilövakuutusmaksut (vapaaehtoiset);4
+A;6590;Henkilövakuutusmaksujen jaksotus;4
+A;6690;Tilikauden aikainen jaksotus;4
+A;6800;Poisto perustamismenoista;4
+A;6810;Poisto tutkimusmenoista;4
+A;6820;Poisto kehittämismenoista;4
+A;6830;Poisto aineettomista oikeuksista;4
+A;6840;Poisto liikearvosta;4
+A;6850;Poisto muista pitkävaikutteisista menoista;4
+A;6860;Poisto rakennuksista ja rakennelmista;4
+A;6870;Poisto koneista ja kalustosta;4
+A;6890;Poisto muista aineellisista hyödykkeistä;4
+A;6930;Poisto konserniaktiivasta;4
+A;6940;Konsernireservin vähennys;4
+A;6950;Arvonalentumiset maa- ja vesialueista;4
+A;6960;Arvonalentumiset sumu-poistettavista pysyvistä vastaavista;4
+A;6970;Arvonalentumiset ennakkomaksuista;4
+A;6980;Arvonalennusten palautukset;4
+A;6990;Vaihtuvien vastaavien poikkeukselliset arvonalentumiset;4
+A;7000;Henkilökunnan koulutus;4
+A;7010;Sisäiset palaverit ja henkilökuntajuhlat;4
+A;7020;Virkistys- ja harrastustoiminta;4
+A;7040;Loma-asuntojen hoitokulut;4
+A;7050;Työterveyshuolto;4
+A;7060;Saadut Kela-korvaukset;3
+A;7070;Henkilökunnan ruokailu / lounassetelit;4
+A;7080;Henkilökunnan ruokalan kulut;4
+A;7090;Ruokatarjoilun omaan käyttöön ottamisen arvonlisävero;4
+A;7100;Saadut ruokakorvaukset;3
+A;7110;Kahvitarvikkeet;4
+A;7120;Työvaatteet;4
+A;7130;Suojavälineet;4
+A;7140;Henkilöstön hankintakulut;4
+A;7150;Työpaikkailmoitukset;4
+A;7160;Lahjat henkilökunnalle;4
+A;7170;Muut henkilösivukulut;4
+A;7200;Maa-aluevuokrat;4
+A;7210;Kiinteistöjen vuokrat;4
+A;7220;Toimitilavastikkeet;4
+A;7230;Toimitilavuokrat;4
+A;7240;Varastovastikkeet;4
+A;7250;Varastovuokrat;4
+A;7260;Autotallivastikkeet;4
+A;7270;Autotalli- ja autopaikkavuokrat;4
+A;7280;Henkilöstöasuntojen vastikkeet;4
+A;7290;Henkilöstöasuntojen vuokrat;4
+A;7300;Asuinhuoneistojen vastikkeet;4
+A;7310;Muut vuokrat ja vastikkeet;4
+A;7320;Energian erityisvähennys;4
+A;7330;Hallinto;4
+A;7340;Käyttö ja huolto;4
+A;7350;Ulkoalueiden hoito;4
+A;7360;Siivous ja puhtaanapito;4
+A;7370;Lämmitys;4
+A;7380;Vesi ja jätevesi;4
+A;7390;Sähkö ja kaasu;4
+A;7400;Jätehuolto;4
+A;7410;Vahinkovakuutukset;4
+A;7420;Kiinteistövero;4
+A;7430;Korjaukset;4
+A;7440;Saadut vakuutuskorvaukset;3
+A;7450;Muut toimitilojen hoitokulut;4
+A;7460;Vartiointi- ja turvallisuuskulut;4
+A;7470;Muut toimitilakulut;4
+A;7500;Ajoneuvoleasing;4
+A;7510;Leasinghyvitykset;3
+A;7520;Ajoneuvovuokrat;4
+A;7530;Ajoneuvojen polttoaine;4
+A;7540;Ajoneuvojen huolto ja korjaus;4
+A;7550;Renkaat ja autotarvikkeet;4
+A;7560;Ajoneuvojen julkiset maksut;4
+A;7570;Ajoneuvovakuutukset;4
+A;7580;Kolarivahingot;4
+A;7590;Maksetut vahingonkorvaukset;4
+A;7600;Maksetut ajoneuvokorvaukset;4
+A;7610;Muut ajoneuvokulut;4
+A;7640;Atk-laite- ja ohjelmistoleasing;4
+A;7650;Atk-laite- ja ohjelmistovuokrat;4
+A;7660;Atk-ohjelmistot, päivitykset ja ylläpito;4
+A;7670;Atk-laitehuollot, korjaukset ja asennukset;4
+A;7680;Atk-laitehankinnat (< 3v. kalusto);4
+A;7690;Atk-laitteiden pienhankinnat;4
+A;7700;Muut atk-laite- ja -ohjelmistokulut;4
+A;7710;Kone- ja kalustoleasing;4
+A;7720;Kone- ja kalustovuokrat;4
+A;7730;Kone- ja kalustohuolto ja korjaus;4
+A;7740;Kone- ja kalustohankinnat (< 3v. kalusto);4
+A;7750;Koneiden ja kaluston pienhankinnat;4
+A;7760;Maksetut työkalukorvaukset;4
+A;7770;Muut kone- ja kalustokulut;4
+A;7800;Matkaliput;4
+A;7810;Taksikulut;4
+A;7820;Hotelli- ym. majoitus;4
+A;7830;Ruokailut matkalla;4
+A;7840;Matkavakuutukset;4
+A;7850;Paikoituskulut;4
+A;7860;Muut matkakulut;4
+A;7870;Kilometrikorvaukset;4
+A;7880;Päivärahat;4
+A;7890;Ulkomaan päivärahat;4
+A;7900;Yömatkarahat;4
+A;7910;Ateriakorvaukset;4
+A;7950;Edustustilaisuudet;4
+A;7960;Edustuslahjat;4
+A;7970;Edustusmatkat;4
+A;7980;Edustustilat;4
+A;7990;Muut edustuskulut;4
+A;8000;Maksetut myyntiprovisiot;4
+A;8010;Luottokorttiprovisiot;4
+A;8020;Myyntirahdit;4
+A;8030;Myyntihuolinta;4
+A;8040;Muut myyntikulut;4
+A;8050;Mainostoimistopalvelut;4
+A;8060;Suoramainonta;4
+A;8070;Ilmoitusmainonta;4
+A;8080;TV- ja radiomainonta;4
+A;8090;Internetmainonta;4
+A;8100;Mainosteippaukset;4
+A;8110;Ulkomainonta;4
+A;8120;Mainosmateriaali ja tarvikkeet;4
+A;8130;Mainoslahjat ja palkinnot;4
+A;8140;Muut mainoskulut;4
+A;8150;Markkinointitilaisuudet;4
+A;8160;Markkinatutkimukset;4
+A;8170;Messut ja näyttelyt;4
+A;8180;Asiakaslehdet;4
+A;8190;Asiakasviihde;4
+A;8200;Somisteet, kukat;4
+A;8210;Tavaranäytteet;4
+A;8220;Maksettu markkinointituki;4
+A;8230;Muut myynnin edistämiskulut;4
+A;8250;Suhdetoimintakulut;4
+A;8260;Kannatusilmoitukset ja -maksut;4
+A;8270;Huomionosoitukset;4
+A;8280;Lahjoitukset;4
+A;8300;Tuotekehityspalvelut;4
+A;8310;Patentit, mallisuoja ja tavaramerkit;4
+A;8320;Laaduntarkkailu;4
+A;8330;Sertifiointi ja laatutodistukset;4
+A;8340;Koulutus;4
+A;8350;Muut tutkimus- ja kehityskulut;4
+A;8370;Vuokratyövoima;4
+A;8380;Taloushallintopalvelut;4
+A;8390;Tilintarkastuspalvelut;4
+A;8410;Laki ja konsultointipalvelut;4
+A;8420;Perintä- ja luottotietopalvelut;4
+A;8430;Muut hallintopalvelut;4
+A;8440;Viranomaismaksut;4
+A;8450;Kirjat;4
+A;8460;Lehdet;4
+A;8470;Tietopalvelut;4
+A;8480;Jäsenmaksut;4
+A;8490;Muu tiedonhankinta;4
+A;8500;Puhelinkulut;4
+A;8510;Matkapuhelinkulut;4
+A;8520;Telefaxkulut;4
+A;8530;Datasiirtokulut;4
+A;8540;Posti- ja lähettikulut;4
+A;8550;Arvo-osuuksien hoitokulut;4
+A;8560;Rahaliikenteen kulut;4
+A;8570;Pyöristyserot;4
+A;8580;Vastuuvakuutukset;4
+A;8590;Esinevakuutukset;4
+A;8600;Muut vakuutukset;4
+A;8610;Maksetut vahingonkorvaukset;3
+A;8620;Toimistotarvikkeet;4
+A;8630;Lomakkeet ja painatuskulut;4
+A;8640;Valokopiot;4
+A;8650;Kokous- ja neuvottelukulut;4
+A;8680;Muut hallintokulut;4
+A;8700;Myynnin luottotappiot;4
+A;8710;Yhteisömyynnin luottotappiot;4
+A;8720;Marginaaliverotusmyynnin luottotappiot;4
+A;8730;Palautuneet luottotappiot;4
+A;8750;Veronkorotukset, vähennyskelpoiset;4
+A;8760;Muut vähennyskelpoiset liikekulut;4
+A;8770;Veronkorotukset, vähennyskelvottomat;4
+A;8780;Sakot, pysäköintivirhemaksut ja muut rangaistusmaksut;4
+A;8790;Fuusiotappio;4
+A;8800;Muut vähennyskelvottomat liikekulut;4
+A;8850;Käyttöomaisuuden luovutustappiot;4
+A;8890;Täsmäytyserot;4
+A;8990;Osuus osakkuusyritysten tuloksesta;3
+A;9000;Osinkotuotot konserniyrityksiltä;3
+A;9010;Osuuskorot konserniyrityksiltä;3
+A;9020;Muut tuotot konserniyrityksiltä;3
+A;9030;Osuus osakkuusyritysten tuloksesta;3
+A;9040;Osinkotuotot omistusyhteysyrityksiltä;3
+A;9050;Osuuskorot omistusyhteysyrityksiltä;3
+A;9060;Muut tuotot omistysyhteysyrityksiltä;3
+A;9070;Tuotot osuuksista muissa omistusyhteysyrityksissä;3
+A;9080;Sijoitustuotot muista pysyvien vastaavien sijoituksista konserniin;3
+A;9090;Osinkotuotot;3
+A;9100;Osuuskorot;3
+A;9110;Yhtiöveronhyvitystuotot;3
+A;9120;Voitto-osuus yhtymistä;3
+A;9130;Luovutusvoitot osuuksista;3
+A;9140;Muut tuotot pysyvien vastaavien sijoituksista;3
+A;9150;Korko- ja rahoitustuotot konsernisaamisista;3
+A;9160;Korkotuotot omistusyhteysyrityssaamisista;3
+A;9170;Korkotuotot myyntisaamisista;3
+A;9180;Korkotuotot osamaksusaamisista;3
+A;9190;Korkotuotot lainasaamisista;3
+A;9200;Korkotuotot henkilökuntasaamisista;3
+A;9210;Korkotuotot osakaslainasaamisista;3
+A;9220;Korkotuotot pankkisaamisista;3
+A;9230;Korkotuotot talletuksista;3
+A;9240;Palautettava yhteisökorko/palautuskorko;3
+A;9250;Muut korkotuotot;3
+A;9260;Valuuttakurssivoitot;3
+A;9270;Osinkotuotot rahoitusarvopapereista;3
+A;9280;Muut tuotot rahoitusarvopapereista;3
+A;9290;Muut rahoitustuotot;3
+A;9300;Konserniosuuksien arvonalentumiset;4
+A;9310;Konsernisaamisten  arvonalentumiset;4
+A;9320;Omistusyhteysyritysosuuksien arvonalentumiset;4
+A;9330;Omistusyhteysyrityssaamisten arvonalentumiset;4
+A;9340;Osakkeiden ja osuuksien arvonalentumiset;4
+A;9350;Saamisten arvonalentumiset;4
+A;9360;Arvonalentumisten palautukset;3
+A;9370;Konserniosuuksien arvonalentumiset;4
+A;9380;Omistusyhteysyritysosuuksien arvonalentumiset;4
+A;9390;Osakkeiden ja osuuksien arvonalentumiset;4
+A;9400;Muiden rahoitusarvopapereiden arvonalentumiset;4
+A;9410;Arvonalentumisten palautukset;3
+A;9420;Korkokulut veloista konserniyrityksille;4
+A;9430;Muut rahoituskulut konserniyrityksille;4
+A;9440;Korkokulut joukkovelkakirjalainoista;4
+A;9450;Korkokulut vaihtovelkakirjalainoista;4
+A;9460;Korkokulut rahoituslaitoslainoista;4
+A;9470;Korkokulut rahoitusyhtiölainoista;4
+A;9480;Korkokulut eläkelainoista;4
+A;9490;Korkokulut ostoveloista;4
+A;9500;Korkokulut rahoitusvekseleistä;4
+A;9510;Korkokulut omistusyhteysyrityslainoista;4
+A;9520;Korkokulut osakaslainoista;4
+A;9530;Maksettava yhteisökorko / jäännösveron korko;4
+A;9540;Verojen viivästysseuraamukset;4
+A;9550;Muut korkokulut;4
+A;9560;Lainojen hoitokulut;4
+A;9570;Limiittipalkkiot;4
+A;9580;Takausprovisiot;4
+A;9590;Luottovakuutukset;4
+A;9600;Kiinnityskulut;4
+A;9610;Perimiskulut;4
+A;9620;Kurssitappiot;4
+A;9640;Factoring-kulut;4
+A;9650;Terminointikulut;4
+A;9660;Saamisten luottotappiot;4
+A;9670;Muut kulut rahoitusarvopapereista;4
+A;9690;Muut rahoituskulut;4
+A;9700;Satunnaiset tuotot;3
+A;9710;Satunnaiset käyttöomaisuuden myyntivoitot;3
+A;9720;Saadut konserniavustukset;3
+A;9730;Satunnainen fuusiovoitto;3
+A;9740;Satunnaiset kulut;4
+A;9750;Satunnaiset käyttöomaisuuden myyntitappiot;4
+A;9760;Annetut konserniavustukset;4
+A;9770;Satunnainen fuusiotappio;4
+A;9780;Osuus osakkuusyritysten tuloksesta;4
+A;9790;Satunnaisten erien tuloverot;4
+A;9800;Aineettomien hyödykkeiden poistoeron muutos;4
+A;9810;Rakennusten poistoeron muutos;4
+A;9820;Koneiden ja kaluston poistoeron muutos;4
+A;9830;Muiden aineellisten hyödykkeiden poistoeron muutos;4
+A;9840;Käyttöomaisuuden jälleenhankintavarauksen muutos;4
+A;9850;Toimitilan jälleenhankintavarauksen muutos;4
+A;9860;Takuuvarauksen muutos;4
+A;9870;Toimintavarauksen muutos;4
+A;9880;Hankintamenon muutosvarauksen muutos;4
+A;9890;Muiden vapaaehtoisten varausten muutos;4
+A;9900;Ennakkoverot;4
+A;9910;Ennakonpidätys työkorvauksista;4
+A;9920;Veronhyvitys osingoista;4
+A;9930;Lähdeverot;4
+A;9940;Tilikauden verojaksotus;4
+A;9950;Veronpalautukset / jäännösverot;4
+A;9960;Muut tuloverot;4
+A;9970;Laskennalliset verot;4
+A;9980;Varallisuusvero;4
+A;9990;Vähemmistöosuudet;4
+H;1001;Vastaavaa;0
+H;1001;Pysyvät vastaavat;2
+H;1001;Aineettomat hyödykkeet;3
+H;1001;Perustamismenot;4
+H;1011;Tutkimusmenot;4
+H;1021;Kehittämismenot;4
+H;1031;Aineettomat oikeudet;4
+H;1051;Liikearvo;4
+H;1061;Konserniliikearvo;4
+H;1071;Muut pitkävaikutteiset menot;4
+H;1091;Ennakkomaksut;4
+H;1101;Aineelliset hyödykkeet;3
+H;1101;Maa- ja vesialueet;4
+H;1101;Omistuskiinteistöt;5
+H;1111;Kiinteistöjen vuokraoikeudet;5
+H;1121;Rakennukset ja rakennelmat;4
+H;1121;Omistusrakennukset ja -rakennelmat;5
+H;1151;Rakennusten ja rakennelmien vuokraoikeudet;5
+H;1161;Koneet ja kalusto;4
+H;1301;Muut aineelliset hyödykkeet;4
+H;1381;Ennakkomaksut ja keskeneräiset hankinnat;4
+H;1401;Sijoitukset;3
+H;1401;Osuudet saman konsernin yrityksissä;4
+H;1411;Saamiset saman konsernin yrityksiltä;4
+H;1421;Osuudet omistusyhteysyrityksissä;4
+H;1431;Saamiset omistusyhteysyrityksiltä;4
+H;1441;Muut osakkeet ja osuudet;4
+H;1471;Muut saamiset;4
+H;1491;Omat osakkeet / osuudet;4
+H;1501;Vaihtuvat vastaavat;2
+H;1501;Vaihto-omaisuus;3
+H;1501;Aineet ja tarvikkeet;4
+H;1511;Keskeneräiset tuotteet;4
+H;1521;Valmiit tuotteet;4
+H;1531;Tavarat;4
+H;1541;Muu vaihto-omaisuus;4
+H;1551;Ennakkomaksut;4
+H;1601;Pitkäaikaiset saamiset;3
+H;1601;Myyntisaamiset;5
+H;1631;Saamiset saman konsernin yrityksiltä;5
+H;1641;Saamiset omistusyhteysyrityksiltä;5
+H;1651;Lainasaamiset;5
+H;1665;Muut saamiset;5
+H;1671;Maksamattomat osakkeet/osuudet;5
+H;1681;Siirtosaamiset;5
+H;1691;Laskennalliset verosaamiset;5
+H;1701;Lyhytaikaiset saamiset;3
+H;1701;Myyntisaamiset;5
+H;1731;Saamiset saman konsernin yrityksiltä;5
+H;1741;Saamiset omistusyhteysyrityksiltä;5
+H;1751;Lainasaamiset;5
+H;1761;Muut saamiset;5
+H;1781;Maksamattomat osakkeet/osuudet;5
+H;1801;Siirtosaamiset;5
+H;1851;Laskennalliset verosaamiset;5
+H;1861;Rahoitusarvopaperit;3
+H;1861;Osuudet saman konsernin yrityksissä;4
+H;1871;Omat osakkeet;4
+H;1881;Muut osakkeet ja osuudet;4
+H;1891;Muut arvopaperit;4
+H;1900;Rahat ja pankkisaamiset;3
+H;1900;Rahat;4
+H;1910;Pankkisaamiset;4
+H;1991;Rahansiirrot ja täsmäytykset;4
+H;2001;Vastattavaa;0
+H;2001;Oma pääoma;2
+H;2001;Osakepääoma;3
+H;2051;Muut rahastot;3
+H;2101;Osuuspääoma;3
+H;2151;Pääomapanokset;3
+H;2201;Peruspääoma (tmi);3
+H;2251;Edellisten tilikausien voitto (tappio);3
+H;2331;Pääomavajaus;3
+H;2341;Yksityistilit tilikaudella;3
+H;2381;Pääomalainat;3
+H;2401;Tilinpäätössiirtojen kertymä;2
+H;2401;Poistoero;3
+H;2451;Vapaaehtoiset varaukset;3
+H;2501;Pakolliset varaukset;2
+H;2501;Eläkevaraukset;3
+H;2531;Verovaraukset;3
+H;2551;Muut pakolliset varaukset;3
+H;2591;Konsernireservi;2
+H;2601;Vieras pääoma;2
+H;2601;Pitkäaikainen vieras pääoma;3
+H;2601;Joukkovelkakirjalainat;4
+H;2611;Vaihtovelkakirjalainat;4
+H;2621;Lainat  rahoituslaitoksilta;4
+H;2651;Eläkelainat;4
+H;2661;Saadut ennakot;4
+H;2671;Ostovelat;4
+H;2691;Rahoitusvekselit;4
+H;2701;Velat saman konsernin yrityksille;4
+H;2711;Velat omistusyhteysyrityksille;4
+H;2721;Muut velat;4
+H;2751;Siirtovelat;4
+H;2771;Laskennalliset verovelat;4
+H;2801;Lyhytaikainen vieras pääoma;3
+H;2801;Joukkovelkakirjalainat;4
+H;2811;Vaihtovelkakirjalainat;4
+H;2821;Lainat rahoituslaitoksilta;4
+H;2851;Eläkelainat;4
+H;2861;Saadut ennakot;4
+H;2871;Ostovelat;4
+H;2891;Rahoitusvekselit;4
+H;2901;Velat saman konsernin yrityksille;4
+H;2911;Velat omistusyhteysyrityksille;4
+H;2921;Muut velat;4
+H;2951;Siirtovelat;4
+H;2981;Laskennalliset verovelat;4
+H;3000;Tuloslaskelma;0
+H;3000;Myyntituotot;1
+H;3000;Yleiset myyntitilit;2
+H;3200;Oheispalvelut;2
+H;3250;Toimitusveloitukset ja osamaksulisät;2
+H;3300;Komissiokauppa ja agentuuri;2
+H;3330;Tavaravienti;2
+H;3400;Myynti, käytetyt tavarat ja taide-, keräily- ja antiikkiesineet;2
+H;3440;Myynti, arvopaperit ja kiinteistöt;2
+H;3500;Myynnin oikaisuerät;2
+H;3600;Valmiiden ja keskeneräisten tuotteiden varastojen lisäys tai vähennys;1
+H;3630;Valmistus omaan käyttöön;1
+H;3650;Liiketoiminnan muut tuotot;1
+H;4000;Materiaalit ja palvelut;1
+H;4000;Aineet, tarvikkeet ja tavarat;2
+H;4000;Ostot tilikauden aikana;3
+H;4000;Aine-, tarvike- ja tavaraostot;4
+H;4090;Tavaratuonti;4
+H;4150;Ostot, käytetyt tavarat ja taide- keräily- ja antiikkiesineet;4
+H;4200;Ostot, arvopaperit ja kiinteistöt;4
+H;4230;Ostojen oikaisuerät;4
+H;4400;Varastojen lisäys tai vähennys;3
+H;4450;Ulkopuoliset palvelut;2
+H;5000;Henkilöstökulut;1
+H;5000;Palkat ja palkkiot;2
+H;5000;Työntekijöiden palkat ja palkkiot;3
+H;5000;Työssäoloajan normaalipalkat;4
+H;5100;Lisät ja korvaukset;4
+H;5200;Palkkiot;4
+H;5300;Loma-ajan ja sosiaalipalkat;4
+H;5400;Luontoisedut;4
+H;5470;Saadut korvaukset palkoista;4
+H;5600;Johdon palkat;3
+H;5600;Johdon palkat ja palkkiot;4
+H;5700;Johdon luontoisedut;4
+H;5770;Saadut korvaukset johdon palkoista;4
+H;5800;Osakkaiden ja omaisten palkat;3
+H;5800;Osakkaiden ja omaisten palkat ja palkkiot;4
+H;5900;Osakkaiden ja omaisten luontoisedut;4
+H;5960;Saadut korvaukset osakkaiden ja omaisten palkoista;4
+H;5990;Luontoisetujen vastatili;3
+H;6000;Henkilösivukulut;2
+H;6000;Eläkekulut;3
+H;6000;Maksetut eläkkeet;4
+H;6100;Eläkevakuutusmaksut;4
+H;6290;Tilikauden aikainen jaksotus;4
+H;6300;Muut henkilösivukulut;3
+H;6300;Sosiaaliturvamaksut;4
+H;6400;Pakolliset vakuutusmaksut;4
+H;6500;Muut henkilöstön vakuutusmaksut;4
+H;6690;Tilikauden aikainen jaksotus;4
+H;6800;Poistot ja arvonalentumiset;1
+H;6800;Suunnitelman mukaiset poistot;2
+H;6930;Konserniliikearvon poisto ja konsernireservin vähennys;2
+H;6950;Arvonalentumiset pysyvien vastaavien hyödykkeistä;2
+H;6990;Vaihtuvien vastaavien poikkeukselliset arvonalentumiset;2
+H;7000;Liiketoiminnan muut kulut;1
+H;7000;Vapaaehtoiset henkilösivukulut;2
+H;7200;Toimitilakulut;2
+H;7500;Ajoneuvokulut;2
+H;7640;Atk-laite ja -ohjelmistokulut;2
+H;7710;Muut kone- ja kalustokulut;2
+H;7800;Matkakulut;2
+H;7950;Edustuskulut;2
+H;8000;Myyntikulut;2
+H;8050;Markkinointikulut;2
+H;8300;Tutkimus- ja kehityskulut;2
+H;8370;Hallintopalvelut;2
+H;8450;Muut hallintokulut;2
+H;8700;Muut liikekulut;2
+H;8890;Täsmäytyserot;2
+H;8990;Osuus osakkuusyritysten voitosta (tappiosta);1
+H;9000;Rahoitustuotot ja -kulut;1
+H;9000;Tuotot osuuksista saman konsernin yrityksissä;3
+H;9030;Osuus osakkuusyritysten voitosta (tappiosta);3
+H;9040;Tuotot osuuksista omistusyhteysyrityksissä;3
+H;9070;Tuotot osuuksista muissa omistusyhteysyrityksissä;3
+H;9080;Tuotot muista pysyvien vastaavien sijoituksista;3
+H;9080;Saman konsernin yrityksiltä;4
+H;9090;Muilta;4
+H;9150;Muut korko- ja rahoitustuotot;3
+H;9150;Saman konsernin yrityksiltä;4
+H;9160;Muilta;4
+H;9300;Arvonalentumiset pysyvien vastaavien sijoituksista;3
+H;9370;Arvonalentumiset vaihtuvien vastaavien rahoitusarvopapereista;3
+H;9420;Korkokulut ja muut rahoituskulut;3
+H;9420;Saman konsernin yrityksille;4
+H;9440;Muille;4
+H;9700;Satunnaiset erät;1
+H;9700;Satunnaiset tuotot;2
+H;9740;Satunnaiset kulut;2
+H;9780;Osuus osakkuusyritysten voitosta (tappiosta);2
+H;9790;Satunnaisten erien tuloverot;2
+H;9800;Tilinpäätössiirrot;1
+H;9800;Poistoeron lisäys (-) tai vähennys (+);2
+H;9840;Vapaaehtoisten varausten lisäys (-) tai vähennys (+);2
+H;9900;Tuloverot;1
+H;9900;Tilikauden ja aikaisempien tilikausien verot;2
+H;9970;Laskennalliset verot;2
+H;9980;Muut välittömät verot;1
+H;9990;Vähemmistöosuudet;1
+V;1075;5;24%;29392
+V;1081;5;24%;29392
+V;1161;5;24%;29392
+V;3000;4;24%;29391
+V;3010;4;24%;29391
+V;3020;4;24%;29391
+V;3030;4;24%;29391
+V;3040;4;24%;29391
+V;3050;4;24%;29391
+V;3060;4;24%;29391
+V;3070;4;24%;29391
+V;3080;4;24%;29391
+V;3090;4;24%;29391
+V;3200;4;24%;29391
+V;3210;4;24%;29391
+V;3220;4;24%;29391
+V;3230;4;24%;29391
+V;3250;4;24%;29391
+V;3260;4;24%;29391
+V;3270;4;24%;29391
+V;3280;4;24%;29391
+V;3290;4;24%;29391
+V;3500;4;24%;29391
+V;3650;4;24%;29391
+V;3700;4;24%;29391
+V;3780;4;24%;29391
+V;3850;4;24%;29391
+V;3860;4;24%;29391
+V;3870;4;24%;29391
+V;3880;4;24%;29391
+V;3890;4;24%;29391
+V;3900;4;24%;29391
+V;3910;4;24%;29391
+V;3920;4;24%;29391
+V;3930;4;24%;29391
+V;3950;4;24%;29391
+V;3990;4;24%;29391
+V;4000;5;24%;29392
+V;4010;5;24%;29392
+V;4020;5;24%;29392
+V;4030;5;24%;29392
+V;4040;5;24%;29392
+V;4050;5;24%;29392
+V;4060;5;24%;29392
+V;4070;5;24%;29392
+V;4080;5;24%;29392
+V;4230;5;24%;29392
+V;4260;5;24%;29392
+V;4290;5;24%;29392
+V;4320;5;24%;29392
+V;4330;5;24%;29392
+V;4360;5;24%;29392
+V;4390;5;24%;29392
+V;4450;5;24%;29392
+V;4460;5;24%;29392
+V;4470;5;24%;29392
+V;4480;5;24%;29392
+V;4490;5;24%;29392
+V;7000;5;24%;29392
+V;7010;5;24%;29392
+V;7020;5;24%;29392
+V;7040;5;24%;29392
+V;7070;5;24%;29392
+V;7080;5;14%;29392
+V;7110;5;14%;29392
+V;7120;5;24%;29392
+V;7130;5;24%;29392
+V;7140;5;24%;29392
+V;7150;5;24%;29392
+V;7160;5;24%;29392
+V;7170;5;24%;29392
+V;7330;5;24%;29392
+V;7340;5;24%;29392
+V;7350;5;24%;29392
+V;7360;5;24%;29392
+V;7370;5;24%;29392
+V;7380;5;24%;29392
+V;7390;5;24%;29392
+V;7400;5;24%;29392
+V;7430;5;24%;29392
+V;7450;5;24%;29392
+V;7460;5;24%;29392
+V;7470;5;24%;29392
+V;7500;5;24%;29392
+V;7510;5;24%;29392
+V;7520;5;24%;29392
+V;7530;5;24%;29392
+V;7540;5;24%;29392
+V;7550;5;24%;29392
+V;7560;5;24%;29392
+V;7580;5;24%;29392
+V;7610;5;24%;29392
+V;7640;5;24%;29392
+V;7650;5;24%;29392
+V;7660;5;24%;29392
+V;7670;5;24%;29392
+V;7680;5;24%;29392
+V;7690;5;24%;29392
+V;7700;5;24%;29392
+V;7710;5;24%;29392
+V;7720;5;24%;29392
+V;7730;5;24%;29392
+V;7740;5;24%;29392
+V;7750;5;24%;29392
+V;7770;5;24%;29392
+V;7800;5;10%;29392
+V;7810;5;10%;29392
+V;7820;5;10%;29392
+V;7830;5;24%;29392
+V;7850;5;24%;29392
+V;7860;5;24%;29392
+V;8000;5;24%;29392
+V;8010;5;24%;29392
+V;8020;5;24%;29392
+V;8030;5;24%;29392
+V;8040;5;24%;29392
+V;8050;5;24%;29392
+V;8060;5;24%;29392
+V;8070;5;24%;29392
+V;8080;5;24%;29392
+V;8090;5;24%;29392
+V;8100;5;24%;29392
+V;8110;5;24%;29392
+V;8120;5;24%;29392
+V;8130;5;24%;29392
+V;8140;5;24%;29392
+V;8150;5;24%;29392
+V;8160;5;24%;29392
+V;8170;5;24%;29392
+V;8180;5;24%;29392
+V;8190;5;24%;29392
+V;8200;5;24%;29392
+V;8210;5;24%;29392
+V;8220;5;24%;29392
+V;8230;5;24%;29392
+V;8250;5;24%;29392
+V;8260;5;24%;29392
+V;8270;5;24%;29392
+V;8280;5;24%;29392
+V;8300;5;24%;29392
+V;8310;5;24%;29392
+V;8320;5;24%;29392
+V;8330;5;24%;29392
+V;8340;5;24%;29392
+V;8350;5;24%;29392
+V;8370;5;24%;29392
+V;8380;5;24%;29392
+V;8390;5;24%;29392
+V;8410;5;24%;29392
+V;8420;5;24%;29392
+V;8430;5;24%;29392
+V;8440;5;24%;29392
+V;8450;5;10%;29392
+V;8460;5;24%;29392
+V;8470;5;24%;29392
+V;8480;5;24%;29392
+V;8490;5;24%;29392
+V;8500;5;24%;29392
+V;8510;5;24%;29392
+V;8520;5;24%;29392
+V;8530;5;24%;29392
+V;8540;5;24%;29392
+V;8550;5;24%;29392
+V;8560;5;24%;29392
+V;8620;5;24%;29392
+V;8630;5;24%;29392
+V;8640;5;24%;29392
+V;8650;5;24%;29392
+V;8680;5;24%;29392
+V;8760;5;24%;29392
+V;9600;5;24%;29392
+V;9610;5;24%;29392
+V;9700;4;24%;29391
+V;9710;4;24%;29391
+V;9740;5;24%;29392
+V;9750;5;24%;29392
+V;3110;10;7
+V;3350;8;7
+V;3360;8;7
+V;3390;8;7
+V;3510;8;7
+V;3520;8;7
+V;4110;9;24%;29394;29393
+V;4240;9;24%;29394;29393
+V;4300;9;24%;29394;29393
+V;4475;9;24%;29394;29393
+V;4470;11;24%;29396;29395
+V;2939;1;0
+V;29391;2;0
+V;29392;3;0
+V;29393;2;0
+V;29394;3;0
+V;29395;2;0
+V;29396;3;0

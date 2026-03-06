@@ -1,0 +1,146 @@
+DP0;3000;3600;LIIKEVAIHTO
+-
+SB0;3000;3600;LIIKEVAIHTO
+-
+GB0;3600;3630;Valmiiden ja keskeneräisten tuotteiden varastojen muutos
+DP1;3600;3630;Valmiiden ja keskeneräisten tuotteiden varastojen muutos
+TB0;3600;3630;Tuotteiden varastojen muutos yhteensä
+-
+GB0;3630;3650;Valmistus omaan käyttöön
+DP1;3630;3650;Valmistus omaan käyttöön
+TB0;3630;3650;Valmistus omaan käyttöön yhteensä
+-
+GB0;3650;4000;Liiketoiminnan muut tuotot
+DP1;3650;4000;Liiketoiminnan muut tuotot
+TB0;3650;4000;Liiketoiminnan muut tuotot yhteensä
+-
+GB0;4000;5000;Materiaalit ja palvelut
+GB1;4000;4450;Aineet, tarvikkeet ja tavarat
+
+GB2;4000;4400;Ostot tilikauden aikana
+DP3;4000;4400;Ostot tilikauden aikana
+TB2;4000;4400;Ostot tilikauden aikana yhteensä
+
+GB2;4400;4450;Varastojen muutos
+DP3;4400;4450;Varastojen muutos
+TB2;4400;4450;Varastojen muutos yhteensä
+
+TB1;4000;4450;Aineet, tarvikkeet ja tavarat yhteensä
+
+GB1;4450;5000;Ulkopuoliset palvelut
+DP2;4450;5000;Ulkopuoliset palvelut
+TB1;4450;5000;Ulkopuoliset palvelut yhteensä
+
+TB0;4000;5000;Materiaalit ja palvelut yhteensä
+-
+GB0;5000;6800;Henkilöstökulut
+
+GB1;5000;6000;Palkat ja palkkiot
+DP2;5000;6000;Palkat ja palkkiot
+TB1;5000;6000;Palkat ja palkkiot yhteensä
+
+GB1;6000;6800;Henkilösivukulut
+
+GB2;6000;6300;Eläkekulut
+DP3;6000;6300;Eläkekulut
+TB2;6000;6300;Eläkekulut yhteensä
+
+GB2;6300;6800;Muut henkilösivukulut
+DP3;6300;6800;Muut henkilösivukulut
+TB2;6300;6800;Muut henkilösivukulut yhteensä
+
+TB1;6000;6800;Henkilösivukulut yhteensä
+TB0;5000;6800;Henkilöstökulut yhteensä
+-
+GB0;6800;7000;Poistot ja arvonalentumiset
+
+GB1;6800;6900;Suunnitelman mukaiset poistot
+DP2;6800;6900;Suunnitelman mukaiset poistot
+TB1;6800;6900;Suunnitelman mukaiset poistot yhteensä
+
+GB1;6900;6990;Arvonalentumiset pysyvien vastaavien hyödykkeistä
+DP2;6900;6990;Arvonalentumiset pysyvien vastaavien hyödykkeistä
+TB1;6900;6990;Arvonalentumiset pysyvien vastaavien hyödykkeistä yht.
+
+GB1;6990;7000;Vaihtuvien vastaavien poikkeukselliset arvonalentumiset
+DP2;6990;7000;Vaihtuvien vastaavien poikkeukselliset arvonalentumiset
+TB1;6990;7000;Vaihtuvien vastaavien poik. arvonalentumiset yht.
+
+TB0;6800;7000;Poistot ja arvonalentumiset yhteensä
+-
+GB0;7000;8990;Liiketoiminnan muut kulut
+DP1;7000;8990;Liiketoiminnan muut kulut
+TB0;7000;8990;Liiketoiminnan muut kulut yhteensä
+-
+SB0;3000;9000;LIIKEVOITTO (-TAPPIO)
+-
+GB0;9000;9700;Rahoitustuotot ja -kulut
+
+GB1;9000;9040;Tuotot osuuksista saman konsernin yrityksissä
+DP2;9000;9040;Tuotot osuuksista saman konsernin yrityksissä
+TB1;9000;9040;Tuotot osuuksista saman konsernin yrityksissä yht.
+
+GB1;9040;9070;Tuotot osuuksista omistusyhteysyrityksissä
+DP2;9040;9070;Tuotot osuuksista omistusyhteysyrityksissä
+TB1;9040;9070;Tuotot osuuksista omistusyhteysyrityksissä yhteensä
+
+GB1;9080;9150;Tuotot muista pysyvien vastaavien sijoituksista
+DP2;9080;9150;Tuotot muista pysyvien vastaavien sijoituksista
+TB1;9080;9150;Tuotot muista pysyvien vastaavien sijoituksista yht.
+
+GB1;9150;9300;Muut korko- ja rahoitustuotot
+DP2;9150;9300;Muut korko- ja rahoitustuotot
+TB1;9150;9300;Muut korko- ja rahoitustuotot yhteensä
+
+GB1;9300;9370;Arvonalentumiset pysyvien vastaavien sijoituksista
+DP2;9300;9370;Arvonalentumiset pysyvien vastaavien sijoituksista
+TB1;9300;9370;Arvonalentumiset pys. vastaavien sijoituksista yht.
+
+GB1;9370;9420;Arvonalentumiset vaihtuvien vastaavien rahoitusarvopapereista
+DP2;9370;9420;Arvonalentumiset vaihtuvien vastaavien rahoitusarvopapereista
+TB1;9370;9420;Arvonalentumiset vaiht. vast. rahoitusarvopap. yht.
+
+GB1;9420;9700;Korkokulut ja muut rahoituskulut
+DP2;9420;9700;Korkokulut ja muut rahoituskulut
+TB1;9420;9700;Korkokulut ja muut rahoituskulut yhteensä
+
+TB0;9000;9700;Rahoitustuotot ja -kulut yhteensä
+-
+SB0;3000;9700;VOITTO (TAPPIO) ENNEN SATUNNAISIA ERIÄ
+-
+GB0;9700;9800;Satunnaiset erät
+
+GB1;9700;9740;Satunnaiset tuotot
+DP2;9700;9740;Satunnaiset tuotot
+TB1;9700;9740;Satunnaiset tuotot yhteensä
+
+GB1;9740;9780;Satunnaiset kulut
+DP2;9740;9780;Satunnaiset kulut
+TB1;9740;9780;Satunnaiset kulut yhteensä
+
+TB0;9700;9800;Satunnaiset erät yhteensä
+-
+SB0;3000;9800;VOITTO (TAPPIO) ENNEN TILINPÄÄTÖSSIIRTOJA JA VEROJA
+-
+GB0;9800;9900;Tilinpäätössiirrot
+
+GB1;9800;9840;Poistoeron muutos
+DP2;9800;9840;Poistoeron muutos
+TB1;9800;9840;Poistoeron muutos yhteensä
+
+GB1;9840;9900;Vapaaehtoisten varausten muutos
+DP2;9840;9900;Vapaaehtoisten varausten muutos
+TB1;9840;9900;Vapaaehtoisten varausten muutos yhteensä
+
+TB0;9800;9900;Tilinpäätössiirrot
+-
+GB0;9900;9980;Tuloverot
+DP1;9900;9980;Tuloverot
+TB0;9900;9980;Tuloverot yhteensä
+-
+GB0;9980;9990;Muut välittömät verot
+DP1;9980;9990;Muut välittömät verot
+TB0;9980;9990;Muut välittömät verot yhteensä
+-
+SB0;3000;9999;TILIKAUDEN VOITTO (TAPPIO)
+

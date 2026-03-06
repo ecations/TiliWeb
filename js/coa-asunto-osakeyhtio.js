@@ -243,6 +243,6 @@
   ];
 
   if (global.Tilikarttamallit && global.Tilikarttamallit.registerTemplate) {
-    global.Tilikarttamallit.registerTemplate("asunto-osakeyhtio", "Asunto-osakeyhtiÃ¶", COA_ASUNTO_OSAKEYHTIO_ACCOUNTS, COA_ASUNTO_OSAKEYHTIO_HEADINGS);
+    global.Tilikarttamallit.registerTemplate("asunto-osakeyhtio", "Asunto-osakeyhtiö", COA_ASUNTO_OSAKEYHTIO_ACCOUNTS, COA_ASUNTO_OSAKEYHTIO_HEADINGS);
   }
 })(typeof window !== "undefined" ? window : this);

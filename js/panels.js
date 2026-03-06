@@ -423,8 +423,6 @@
     const typeNames = (typeof Tilikarttamallit !== 'undefined' && Tilikarttamallit.ACCOUNT_TYPE_NAMES) ? Tilikarttamallit.ACCOUNT_TYPE_NAMES : ['Vastaavaa', 'Vastattavaa', 'Oma pääoma', 'Tulot', 'Menot', 'Edellisten tilikausien voitto', 'Tilikauden voitto'];
     const vatCodeNames = (typeof Tilikarttamallit !== 'undefined' && Tilikarttamallit.VAT_CODE_NAMES) ? Tilikarttamallit.VAT_CODE_NAMES : [];
     const allAccounts = getAccounts();
-    const defaultAccountId = getDefaultAccountId();
-
     const items = [];
     accounts.forEach(a => items.push({ type: 'account', number: (a.number || '').toString(), account: a }));
     headings.forEach(h => items.push({ type: 'heading', number: (h.number || '').toString(), level: h.level || 0, heading: h }));
@@ -450,7 +448,7 @@
     html += '<label class="coa-filter-fav"><input type="checkbox" id="coaShowFavouritesOnly" ' + (showFavouritesOnly ? 'checked' : '') + '> Näytä vain suosikkitilit</label>';
     html += '</p>';
     html += '<div class="coa-table-wrap"><table class="data-table coa-table"><thead><tr>';
-    html += '<th>Nro</th><th>Nimi / Otsikko</th><th>Tyyppi</th><th>ALV-koodi</th><th>ALV %</th><th>ALV-vastatili</th><th>Suosikki</th><th>Oletusvastatili</th><th>Toiminnot</th></tr></thead><tbody>';
+    html += '<th>Nro</th><th>Nimi / Otsikko</th><th>Tyyppi</th><th>ALV-koodi</th><th>ALV %</th><th>ALV-vastatili</th><th>Suosikki</th><th>Toiminnot</th></tr></thead><tbody>';
 
     items.forEach(item => {
       if (item.type === 'heading') {
@@ -477,7 +475,6 @@
         html += '<td><input type="number" value="' + (a.vatRate != null ? a.vatRate : '') + '" class="coa-vat-rate" min="0" max="100" step="0.01" size="4" placeholder="%"></td>';
         html += '<td><span class="coa-picker" data-picker="vat-account" data-value="' + vatAccountId + '" role="button" tabindex="0">' + getAccountDisplay(vatAccountId).replace(/</g, '&lt;') + '</span></td>';
         html += '<td><input type="checkbox" class="coa-favourite" ' + ((a.flags || 0) & 1 ? 'checked' : '') + ' title="Suosikkitili"></td>';
-        html += '<td><input type="checkbox" class="coa-default-account" ' + (a.id === defaultAccountId ? 'checked' : '') + ' title="Oletusvastatili"></td>';
         html += '<td><button type="button" class="btn btn-save-coa">Tallenna</button> <button type="button" class="btn btn-danger btn-delete-coa">Poista tili</button></td></tr>';
       }
     });
@@ -554,16 +551,6 @@
       window.openCOAPanel();
     };
 
-    overlay.querySelectorAll('.coa-default-account').forEach(cb => {
-      cb.onchange = function () {
-        if (!this.checked) return;
-        const tr = this.closest('tr');
-        const id = tr.dataset.id ? parseInt(tr.dataset.id, 10) : null;
-        if (id != null) setDefaultAccountId(id);
-        overlay.querySelectorAll('.coa-default-account').forEach(other => { if (other !== cb) other.checked = false; });
-        refreshApp();
-      };
-    });
 
     overlay.querySelectorAll('.btn-save-coa').forEach(btn => {
       btn.onclick = function () {
