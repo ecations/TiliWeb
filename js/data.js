@@ -180,22 +180,37 @@ function applyTilikarttamalli(templateId) {
   });
 
   // Remap entry accountId references: old id → account number → new id.
-  // Entries whose account number doesn't exist in the new template get accountId set to 0.
-  const entries = loadJson('entries', []);
+  // VAT sub-rows (rowNumber >= 100000) are auto-generated bookkeeping — if their account
+  // doesn't exist in the new template, drop them entirely (they'll be regenerated on next save).
+  // Base rows whose account doesn't exist in the new template get accountId = 0.
+  const allEntries = loadJson('entries', []);
+  const keptEntries = [];
   let remapped = false;
-  entries.forEach(e => {
+  allEntries.forEach(e => {
+    const isVatSubRow = (e.rowNumber || 0) >= 100000;
     const num = oldIdToNumber[e.accountId];
-    if (num == null) return; // already 0 or unknown
+    if (num == null) {
+      // accountId was already 0 or unrecognised — keep as-is for base rows, drop for sub-rows
+      if (!isVatSubRow) keptEntries.push(e);
+      else remapped = true; // dropping it counts as a change
+      return;
+    }
     const newId = numberToId[num];
-    if (newId != null && newId !== e.accountId) {
-      e.accountId = newId;
-      remapped = true;
-    } else if (newId == null) {
+    if (newId == null) {
+      // Account number not in new template
+      if (isVatSubRow) {
+        remapped = true; // drop the orphaned VAT sub-row
+        return;
+      }
       e.accountId = 0;
       remapped = true;
+    } else if (newId !== e.accountId) {
+      e.accountId = newId;
+      remapped = true;
     }
+    keptEntries.push(e);
   });
-  if (remapped) saveJson('entries', entries);
+  if (remapped) saveJson('entries', keptEntries);
 
   return true;
 }
