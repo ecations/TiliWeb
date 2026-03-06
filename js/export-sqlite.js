@@ -120,7 +120,7 @@
     try {
       SQL = await initSqlJs({
         locateFile: function (file) {
-          return 'https://cdn.jsdelivr.net/npm/sql.js@1.14.0/dist/' + file;
+          return 'js/vendor/' + file;
         }
       });
     } catch (e) {

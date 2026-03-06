@@ -520,7 +520,7 @@
       try {
         await new Promise(function (resolve, reject) {
           var s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/sql.js@1.14.0/dist/sql-wasm.js';
+          s.src = 'js/vendor/sql-wasm.js';
           s.onload = resolve;
           s.onerror = function () { reject(new Error('SQL.js script failed to load')); };
           document.head.appendChild(s);
@@ -536,7 +536,7 @@
     }
     let SQL;
     try {
-      SQL = await initSqlJs({ locateFile: function (file) { return 'https://cdn.jsdelivr.net/npm/sql.js@1.14.0/dist/' + file; } });
+      SQL = await initSqlJs({ locateFile: function (file) { return 'js/vendor/' + file; } });
     } catch (e) {
       report.errors.push('SQL.js: ' + (e.message || e));
       return report;
