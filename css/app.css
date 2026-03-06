@@ -966,7 +966,6 @@ mark.search-hl {
   position: relative;
 }
 .menu-item-submenu .menu-submenu-trigger {
-  display: block;
   width: 100%;
   padding: 8px 16px;
   text-align: left;
