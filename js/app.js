@@ -19,7 +19,10 @@
     changed: false,
     searchPhrase: '',
     searchMode: false,
-    selectedEntryIndex: null,
+    /** @type {number[]} Row indices of selected voucher lines (viennit). */
+    selectedEntryIndices: [],
+    /** Pivot row for Shift+click range selection; cleared when selection is cleared. */
+    entrySelectionAnchorIndex: null,
     entriesClipboard: [],
     suggestActive: false   // true only while user is actively adding new entries
   };
@@ -123,7 +126,7 @@
       return;
     }
     const docTypeId = getSettings().documentTypeId;
-    let list = getDocumentsForDocType(period.id, docTypeId);
+    let list = getDocumentsForDocTypeStrict(period.id, docTypeId);
     if (state.searchMode && state.searchPhrase.trim()) {
       const q = state.searchPhrase.trim().toLowerCase();
       list = list.filter(d => {
@@ -148,7 +151,7 @@
     s.documentTypeId = docTypeId != null ? docTypeId : null;
     saveSettings(s);
     state.documentIndex = 0;
-    state.documents = getDocumentsForDocType(period.id, docTypeId);
+    state.documents = getDocumentsForDocTypeStrict(period.id, docTypeId);
     if (state.searchMode && state.searchPhrase.trim()) {
       const q = state.searchPhrase.trim().toLowerCase();
       state.documents = state.documents.filter(d => {
@@ -185,11 +188,15 @@
       state.documents = [];
       state.document = null;
       state.entries = [];
+      state.selectedEntryIndices = [];
+      state.entrySelectionAnchorIndex = null;
       return;
     }
     if (state.documents.length === 0) {
       state.document = null;
       state.entries = [];
+      state.selectedEntryIndices = [];
+      state.entrySelectionAnchorIndex = null;
       return;
     }
     const idx = Math.max(0, Math.min(state.documentIndex, state.documents.length - 1));
@@ -205,6 +212,8 @@
     }
     state.changed = false;
     state.suggestActive = false;   // reset on every document load/navigation
+    state.selectedEntryIndices = [];
+    state.entrySelectionAnchorIndex = null;
   }
 
   function buildEntriesForStorage(docId, uiEntries) {
@@ -355,7 +364,7 @@
       currentDocNumber != null &&
       !isNaN(currentDocNumber);
 
-    const storedDocs = getDocumentsForDocType(period.id, docType.id).filter(d => d && d.id);
+    const storedDocs = getDocumentsForDocTypeStrict(period.id, docType.id).filter(d => d && d.id);
     const inMemoryDocs = (state.documents || []).filter(d =>
       d &&
       (d.documentTypeId == null || d.documentTypeId === docType.id) &&
@@ -718,12 +727,55 @@
     render();
   }
 
+  function adjustEntrySelectionAfterRemove(removedIndex) {
+    state.selectedEntryIndices = state.selectedEntryIndices
+      .filter(function (i) { return i !== removedIndex; })
+      .map(function (i) { return i > removedIndex ? i - 1 : i; });
+    if (state.entrySelectionAnchorIndex != null) {
+      if (state.entrySelectionAnchorIndex === removedIndex) {
+        state.entrySelectionAnchorIndex = null;
+      } else if (state.entrySelectionAnchorIndex > removedIndex) {
+        state.entrySelectionAnchorIndex--;
+      }
+    }
+  }
+
+  function removeEntriesAtIndices(indices) {
+    if (!isDocumentEditable()) return;
+    const uniq = [...new Set(indices)]
+      .filter(function (i) { return i >= 0 && i < state.entries.length; })
+      .sort(function (a, b) { return b - a; });
+    if (!uniq.length) return;
+    uniq.forEach(function (i) { state.entries.splice(i, 1); });
+    state.entries.forEach(function (e, i) { e.rowNumber = i; });
+    state.changed = true;
+    state.selectedEntryIndices = [];
+    state.entrySelectionAnchorIndex = null;
+    render();
+  }
+
   function removeEntry(rowIndex) {
     if (!isDocumentEditable()) return;
     state.entries.splice(rowIndex, 1);
     state.entries.forEach((e, i) => e.rowNumber = i);
     state.changed = true;
+    adjustEntrySelectionAfterRemove(rowIndex);
     render();
+  }
+
+  function entryRowIndexSelected(rowIndex) {
+    return state.selectedEntryIndices.indexOf(rowIndex) >= 0;
+  }
+
+  function selectAllEntryRows() {
+    if (!state.document || !state.entries.length) return;
+    state.selectedEntryIndices = state.entries.map(function (_, i) { return i; });
+    state.entrySelectionAnchorIndex = 0;
+  }
+
+  function clearEntryRowSelection() {
+    state.selectedEntryIndices = [];
+    state.entrySelectionAnchorIndex = null;
   }
 
   /** Normalize entry to have amountDebit, amountCredit and vatAmount (from legacy debit/amount). */
@@ -891,18 +943,19 @@
 
   function copySelectedEntries() {
     if (!state.document || !isDocumentEditable()) return;
-    const idx = state.selectedEntryIndex;
-    if (idx == null || idx < 0 || idx >= state.entries.length) {
-      return;
-    }
-    const e = state.entries[idx];
-    state.entriesClipboard = [{
-      accountId: e.accountId || 0,
-      amountDebit: e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0),
-      amountCredit: e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0),
-      vatAmount: e.vatAmount != null ? e.vatAmount : 0,
-      description: e.description || ''
-    }];
+    const indices = state.selectedEntryIndices.slice().sort(function (a, b) { return a - b; })
+      .filter(function (i) { return i >= 0 && i < state.entries.length; });
+    if (!indices.length) return;
+    state.entriesClipboard = indices.map(function (idx) {
+      const e = state.entries[idx];
+      return {
+        accountId: e.accountId || 0,
+        amountDebit: e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0),
+        amountCredit: e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0),
+        vatAmount: e.vatAmount != null ? e.vatAmount : 0,
+        description: e.description || ''
+      };
+    });
     const pasteBtn = document.getElementById('menuPasteEntries');
     if (pasteBtn) pasteBtn.disabled = false;
   }
@@ -992,22 +1045,41 @@
     const doc = state.document;
     const canEdit = isDocumentEditable();
     const numEl = document.getElementById('docNumber');
+    const emptyHint = document.getElementById('docNumberEmptyHint');
+    const period = getPeriod();
+    const docType = getDocType();
+    const totalForType = period && docType ? getDocumentsForDocTypeStrict(period.id, docType.id).length : 0;
+    const noDocsForType = period && docType && !doc && totalForType === 0;
     const displayEl = document.getElementById('docDateDisplay');
     const pickerBtn = document.getElementById('docDatePickerBtn');
-    if (doc) {
-      numEl.value = doc.number ?? '';
-      setDocDateDisplay(doc.date || '');
-      numEl.readOnly = !canEdit;
-      if (displayEl) { displayEl.readOnly = !canEdit; displayEl.placeholder = canEdit ? 'pp.kk.vvvv' : ''; }
-      if (pickerBtn) pickerBtn.disabled = !canEdit;
-    } else {
+    if (noDocsForType) {
+      numEl.classList.add('hidden');
       numEl.value = '';
+      if (emptyHint) emptyHint.classList.remove('hidden');
       setDocDateDisplay('');
+      if (displayEl) { displayEl.readOnly = true; displayEl.placeholder = ''; }
+      if (pickerBtn) pickerBtn.disabled = true;
+    } else {
+      numEl.classList.remove('hidden');
+      if (emptyHint) emptyHint.classList.add('hidden');
+      if (doc) {
+        numEl.value = doc.number != null && doc.number !== '' ? doc.number : '';
+        setDocDateDisplay(doc.date || '');
+        numEl.readOnly = !canEdit;
+        if (displayEl) { displayEl.readOnly = !canEdit; displayEl.placeholder = canEdit ? 'pp.kk.vvvv' : ''; }
+        if (pickerBtn) pickerBtn.disabled = !canEdit;
+      } else {
+        numEl.value = '';
+        setDocDateDisplay('');
+      }
     }
     updateDocDateWarning();
   }
 
   function renderEntriesTable() {
+    state.selectedEntryIndices = state.selectedEntryIndices.filter(function (i) {
+      return i >= 0 && i < state.entries.length;
+    });
     const tbody = document.getElementById('entriesBody');
     tbody.innerHTML = '';
     const accounts = getAccounts();
@@ -1040,11 +1112,21 @@
       if (canEdit) {
         tr.addEventListener('click', function (e) {
           if (e.target.closest('input') || e.target.closest('.picker-trigger')) return;
-          state.selectedEntryIndex = rowIndex;
+          const anchor = state.entrySelectionAnchorIndex;
+          const anchorOk = anchor != null && anchor >= 0 && anchor < state.entries.length;
+          if (e.shiftKey && anchorOk) {
+            const a = Math.min(anchor, rowIndex);
+            const b = Math.max(anchor, rowIndex);
+            state.selectedEntryIndices = [];
+            for (let i = a; i <= b; i++) state.selectedEntryIndices.push(i);
+          } else {
+            state.selectedEntryIndices = [rowIndex];
+            state.entrySelectionAnchorIndex = rowIndex;
+          }
           render();
         });
       }
-      tr.classList.toggle('selected', state.selectedEntryIndex === rowIndex);
+      tr.classList.toggle('selected', entryRowIndexSelected(rowIndex));
       const acc = entry.accountId ? getAccountById(entry.accountId) : null;
       const accText = acc ? acc.number + ' ' + acc.name : '— Valitse tili —';
 
@@ -1389,6 +1471,63 @@
 
     // Defer heavy stats calculation so it never blocks the UI paint.
     scheduleStatsUpdate();
+    renderBackupFooter();
+  }
+
+  function renderBackupFooter() {
+    const el = document.getElementById('statusBackupRow');
+    if (!el) return;
+
+    const at = getSetting('lastSqliteBackupAt', '');
+    const rawCount = parseInt(getSetting('lastSqliteBackupEntryCount', '0'), 10);
+    const countAtBackup = isNaN(rawCount) ? 0 : rawCount;
+    const nowCount = typeof getTotalEntryCount === 'function' ? getTotalEntryCount() : 0;
+    const entriesSince = Math.max(0, nowCount - countAtBackup);
+
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    let tooOld = false;
+    if (!at) {
+      tooOld = true;
+    } else {
+      const t = new Date(at).getTime();
+      tooOld = isNaN(t) || (Date.now() - t > weekMs);
+    }
+    const tooManyEntries = entriesSince > 10;
+    const warn = tooOld || tooManyEntries;
+
+    let dateStr = '';
+    if (at) {
+      const d = new Date(at);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleString('fi-FI', { dateStyle: 'short', timeStyle: 'short' });
+      }
+    }
+
+    const warnIcon = warn
+      ? '<span class="backup-warn-icon" title="Varmuuskopio kannattaa tehdä uudelleen" aria-hidden="true">&#9888;</span> '
+      : '';
+
+    const kirjausOsuus = entriesSince === 1 ? '<strong>1</strong> kirjaus' : '<strong>' + entriesSince + '</strong> kirjausta';
+
+    let body = '';
+    if (!at) {
+      body = '<span class="backup-text">Ei vielä SQLite-varmuuskopiota.</span>';
+    } else {
+      body = '<span class="backup-text">Viimeisin varmuuskopio tehty: <strong>' + dateStr + '</strong>. Se oli ' + kirjausOsuus + ' sitten.</span>';
+    }
+    body += ' <a href="#" class="backup-link" id="linkBackupNow">Varmuuskopioi nyt</a>';
+
+    el.innerHTML = warnIcon + body;
+
+    const link = el.querySelector('#linkBackupNow');
+    if (link) {
+      link.onclick = function (e) {
+        e.preventDefault();
+        if (window.TilitinExportSQLite && window.TilitinExportSQLite.exportToSQLite) {
+          window.TilitinExportSQLite.exportToSQLite();
+        }
+      };
+    }
   }
 
   let _statsTimer = null;
@@ -1586,9 +1725,11 @@
     document.getElementById('btnDeleteDoc').onclick = deleteCurrentDocument;
     document.getElementById('btnAddEntry').onclick = addEntry;
     document.getElementById('btnRemoveEntry').onclick = () => {
-      const row = document.querySelector('#entriesBody tr.selected');
-      const idx = row ? Array.from(document.getElementById('entriesBody').children).indexOf(row) : state.entries.length - 1;
-      if (idx >= 0) removeEntry(idx);
+      if (state.selectedEntryIndices.length) {
+        removeEntriesAtIndices(state.selectedEntryIndices.slice());
+      } else if (state.entries.length) {
+        removeEntry(state.entries.length - 1);
+      }
     };
     document.getElementById('btnFindByNumber').onclick = findDocumentByNumber;
     document.getElementById('btnSearch').onclick = toggleSearch;
@@ -1662,8 +1803,9 @@
       if (e.key === 'F8' || e.key === 'Insert') { e.preventDefault(); addEntry(); render(); }
       if (e.key === 'Delete' && !e.ctrlKey) {
         e.preventDefault();
-        const idx = state.selectedEntryIndex;
-        if (idx != null && idx >= 0 && idx < state.entries.length) { removeEntry(idx); render(); }
+        if (state.selectedEntryIndices.length) {
+          removeEntriesAtIndices(state.selectedEntryIndices.slice());
+        }
       }
     });
     document.getElementById('btnSearchRun').onclick = runSearch;
@@ -1719,8 +1861,33 @@
 
     // COA, Settings, etc.
     document.getElementById('menuCoa').onclick = () => openCOAPanel();
-    document.getElementById('menuCopyEntries').onclick = () => { copySelectedEntries(); document.querySelector('#menuEdit')?.closest('.menu-wrap')?.querySelector('.menu-dropdown')?.classList.add('hidden'); };
-    document.getElementById('menuPasteEntries').onclick = () => { pasteEntries(); document.querySelector('#menuEdit')?.closest('.menu-wrap')?.querySelector('.menu-dropdown')?.classList.add('hidden'); };
+    document.getElementById('menuCopyEntries').onclick = () => { copySelectedEntries(); document.getElementById('menuEdit')?.classList.add('hidden'); };
+    document.getElementById('menuPasteEntries').onclick = () => { pasteEntries(); document.getElementById('menuEdit')?.classList.add('hidden'); };
+    document.getElementById('menuSelectAllEntries').onclick = () => {
+      selectAllEntryRows();
+      document.getElementById('menuEdit')?.classList.add('hidden');
+      render();
+    };
+    document.getElementById('menuClearEntrySelection').onclick = () => {
+      clearEntryRowSelection();
+      document.getElementById('menuEdit')?.classList.add('hidden');
+      render();
+    };
+
+    document.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      const t = e.target;
+      if (!t || typeof t.closest !== 'function') return;
+      if (t.closest('.entries-wrap')) return;
+      if (t.closest('.menu-wrap')) return;
+      if (t.closest('.toolbar')) return;
+      if (t.closest('.panel-overlay')) return;
+      if (t.closest('.picker-modal')) return;
+      if (!state.selectedEntryIndices.length) return;
+      clearEntryRowSelection();
+      render();
+    });
+
     document.getElementById('menuLoadTilikarttamalli').onclick = () => openTilikarttamalliPanel();
     document.getElementById('menuPeriods').onclick = () => openPeriodsPanel();
     // "Muokkaa tositelajeja" is now a sentinel option inside docTypeSelect (no separate button).

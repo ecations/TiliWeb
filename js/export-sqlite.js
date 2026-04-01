@@ -347,6 +347,9 @@
     a.download = 'tilitin.sqlite';
     a.click();
     URL.revokeObjectURL(url);
+
+    if (typeof recordSqliteBackup === 'function') recordSqliteBackup();
+    if (window.TilitinApp && typeof window.TilitinApp.render === 'function') window.TilitinApp.render();
   }
 
   window.TilitinExportSQLite = { exportToSQLite: exportToSQLite };

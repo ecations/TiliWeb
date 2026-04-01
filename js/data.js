@@ -430,10 +430,30 @@ function getDocumentsInNumberRange(periodId, numberStart, numberEnd) {
 }
 
 /**
+ * Documents for this tositelaji only — no fallback to all period documents.
+ * Main document list and navigation use this so an empty tositelaji does not show
+ * another type’s voucher (e.g. tositenumero 0 from a different document).
+ * If documentTypeId is null, returns all documents in the period (no filter).
+ */
+function getDocumentsForDocTypeStrict(periodId, documentTypeId) {
+  if (documentTypeId == null || documentTypeId === '') {
+    return getDocuments(periodId, null);
+  }
+  const docType = getDocumentTypeById(documentTypeId);
+  if (!docType) return [];
+  if (docType.numberStart != null || docType.numberEnd != null) {
+    return getDocumentsInNumberRange(periodId, docType.numberStart, docType.numberEnd);
+  }
+  return getDocuments(periodId, docType.id);
+}
+
+/**
  * Canonical helper: documents for given period + tositelaji.
  * Uses number range when defined; otherwise falls back to documentTypeId.
  * If no documents are found for the type, falls back to all documents in the period.
+ * (Legacy / import paths; prefer getDocumentsForDocTypeStrict for UI.)
  */
+
 function getDocumentsForDocType(periodId, documentTypeId) {
   const docType = documentTypeId != null ? getDocumentTypeById(documentTypeId) : null;
   let list;
@@ -826,6 +846,17 @@ function setSetting(key, value) {
   saveSettings(s);
 }
 
+/** Total entry rows in storage (for backup reminder). */
+function getTotalEntryCount() {
+  return loadJson('entries', []).length;
+}
+
+/** Call after successful export (Tiedosto → Vie SQLite…). */
+function recordSqliteBackup() {
+  setSetting('lastSqliteBackupAt', new Date().toISOString());
+  setSetting('lastSqliteBackupEntryCount', String(getTotalEntryCount()));
+}
+
 // --- Starting balances (stored per account per period) ---
 function getStartingBalances(periodId) {
   const key = APP_KEY + 'starting_balances_' + periodId;
@@ -839,6 +870,76 @@ function getStartingBalances(periodId) {
 
 function saveStartingBalances(periodId, balances) {
   localStorage.setItem(APP_KEY + 'starting_balances_' + periodId, JSON.stringify(balances));
+}
+
+/** Same debit/credit-normal rule as openReportLedger (reports.js). */
+function accountIsDebitNormalForLedger(account) {
+  const type = Number(account.type);
+  return type === 0 || type === 4 || type === 5;
+}
+
+/**
+ * Closing display balance for one account at end of period — matches Pääkirja "Loppusaldo".
+ * Document order matches ledger: getDocuments() order, entries in document order.
+ */
+function computeLedgerClosingDisplayForAccount(account, periodId) {
+  const sb = getStartingBalances(periodId)[account.id] || {};
+  const sbDeb = parseFloat(sb.debit) || 0;
+  const sbCred = parseFloat(sb.credit) || 0;
+  const isDebitNormal = accountIsDebitNormalForLedger(account);
+  let runningBalance = sbDeb - sbCred;
+  if (!isDebitNormal) runningBalance = -runningBalance;
+
+  const documents = getDocuments(periodId, null);
+  documents.forEach(function (doc) {
+    getEntriesByDocument(doc.id).forEach(function (e) {
+      if (e.accountId !== account.id) return;
+      const deb = parseFloat(e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0)) || 0;
+      const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
+      const delta = isDebitNormal ? (deb - cred) : (cred - deb);
+      runningBalance = Math.round((runningBalance + delta) * 100) / 100;
+    });
+  });
+  return runningBalance;
+}
+
+/** Convert ledger closing display balance to stored opening { debit, credit } for next period. */
+function closingDisplayToOpeningDebitCredit(account, closingDisplay) {
+  const rb = Math.round(closingDisplay * 100) / 100;
+  if (Math.abs(rb) < 0.005) return { debit: 0, credit: 0 };
+  const isDebitNormal = accountIsDebitNormalForLedger(account);
+  if (isDebitNormal) {
+    return rb >= 0 ? { debit: rb, credit: 0 } : { debit: 0, credit: -rb };
+  }
+  return rb >= 0 ? { debit: 0, credit: rb } : { debit: -rb, credit: 0 };
+}
+
+/** Period immediately before `period` in start-date order, or null. */
+function getPreviousPeriod(period) {
+  if (!period) return null;
+  const periods = getPeriods().slice().sort(function (a, b) {
+    return String(a.startDate || '').localeCompare(String(b.startDate || ''));
+  });
+  const idx = periods.findIndex(function (p) { return Number(p.id) === Number(period.id); });
+  if (idx <= 0) return null;
+  return periods[idx - 1];
+}
+
+/**
+ * Opening balances for current period derived from previous period's ledger closings.
+ * @returns {{ previousPeriod: object, balances: Object<number, {debit:number,credit:number}> } | null}
+ */
+function computeOpeningBalancesFromPreviousPeriodClosing(currentPeriod) {
+  const prev = getPreviousPeriod(currentPeriod);
+  if (!prev) return null;
+  const accounts = getAccounts();
+  const out = {};
+  accounts.forEach(function (a) {
+    const closing = computeLedgerClosingDisplayForAccount(a, prev.id);
+    const oc = closingDisplayToOpeningDebitCredit(a, closing);
+    if (oc.debit || oc.credit) out[a.id] = oc;
+  });
+  return { previousPeriod: prev, balances: out };
 }
 
 // --- Report structures (optional, for custom report layouts) ---

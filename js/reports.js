@@ -47,12 +47,6 @@
   }
 
   function showReportInPanel(title, html) {
-    const popupEnabled = getSetting('reportPopup', 'false') === 'true';
-    if (popupEnabled) {
-      openReportPopup(title, html);
-      return;
-    }
-
     const container = document.getElementById('panelContainer');
     container.innerHTML = '';
     const overlay = document.createElement('div');
@@ -63,9 +57,6 @@
       '<div class="panel-footer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
         '<button type="button" class="btn btn-primary" id="btnPrintReport">Tulosta</button>' +
         '<button type="button" class="btn" id="btnOpenPopupReport">Avaa ponnahdusikkunassa</button>' +
-        '<label style="margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap;">' +
-          '<input type="checkbox" id="chkReportPopup"> Avaa ponnahdusikkunassa (oletus)' +
-        '</label>' +
         '<button type="button" class="btn" id="btnCloseReport">Sulje</button>' +
       '</div></div>';
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
@@ -73,9 +64,6 @@
     overlay.querySelector('#btnCloseReport').onclick = () => overlay.remove();
     overlay.querySelector('#btnPrintReport').onclick = () => window.print();
     overlay.querySelector('#btnOpenPopupReport').onclick = () => openReportPopup(title, html);
-    const chk = overlay.querySelector('#chkReportPopup');
-    chk.checked = getSetting('reportPopup', 'false') === 'true';
-    chk.onchange = function () { setSetting('reportPopup', this.checked ? 'true' : 'false'); };
     container.appendChild(overlay);
   }
 
@@ -948,9 +936,9 @@
       const sb = startingBalances[a.id] || {};
       const d = (sb.debit || 0) + (byAccount[a.id] ? byAccount[a.id].debit : 0);
       const c = (sb.credit || 0) + (byAccount[a.id] ? byAccount[a.id].credit : 0);
-      const saldo = c - d;
+      const saldo = c - d; // revenue-normal positive, expense-normal negative
       if (a.type === REVENUE) revenue += saldo;
-      if (a.type === EXPENSE) expense += saldo;
+      if (a.type === EXPENSE) expense += -saldo; // show expenses as positive
     });
     let html = '<h2>Tuloslaskelma</h2><p>' + (settings.name || '') + ' ' + (settings.businessId || '') + '</p>';
     html += '<p>Tilikausi: ' + period.startDate + ' – ' + period.endDate + '</p>';

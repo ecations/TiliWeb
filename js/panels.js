@@ -31,6 +31,84 @@
     if (window.TilitinApp && window.TilitinApp.render) window.TilitinApp.render();
   }
 
+  /** Finnish prompt for AI: bulk CSV format for “Luo useita tositteita kerralla”. */
+  function getBulkImportAiPrompt(period) {
+    const pStart = period && period.startDate ? String(period.startDate) : '';
+    const pEnd = period && period.endDate ? String(period.endDate) : '';
+    const favAccounts = getAccounts()
+      .filter(function (a) { return (a.flags || 0) & 1; })
+      .sort(function (a, b) { return String(a.number || '').localeCompare(String(b.number || ''), 'fi'); });
+    let favBlock = '';
+    if (favAccounts.length) {
+      favBlock =
+        'SUOSIKKITILIT (merkitty tähdellä tilikartassa; käytä näitä tilinumeroita kun ne sopivat kontekstiin):\n' +
+        favAccounts.map(function (a) {
+          return '- ' + String(a.number || '').trim() + ' ' + String(a.name || '').trim();
+        }).join('\n') +
+        '\n\n';
+    } else {
+      favBlock =
+        'SUOSIKKITILIT: käyttäjällä ei ole vielä merkittyjä suosikkitilejä tilikartassa (voit silti valita sopivat tilinumerot koko tilikartasta).\n\n';
+    }
+    return (
+      'Olen tuomassa kirjanpitoviennit TiliWeb-sovellukseen (valikosta Työkalut → Luo useita tositteita kerralla…). ' +
+      'Haluan, että analysoit liitteet (kuitit, tiliotteet, laskut tms.) ja tuot niistä kirjanpitoviennit alla kuvatussa tekstimuodossa.\n\n' +
+      'TILIKAUSI (kaikkien rivien päivämäärien on oltava tällä välillä):\n' +
+      pStart + ' – ' + pEnd + '\n\n' +
+      favBlock +
+      'CSV-MUOTO (kopioitavaksi suoraan TiliWebin “Viennit (CSV)” -kenttään):\n' +
+      '- Erotin: puolipiste (;) tai pilkku (,). Käytä mieluiten puolipistettä.\n' +
+      '- Ensimmäinen rivi voi olla otsikko: Päivä;Tili;Debet;Kredit;Selite\n' +
+      '- Sarakkeet:\n' +
+      '  • Päivä: VVVV-KK-PP (esim. 2025-03-15) tai pp.kk.vvvv\n' +
+      '  • Tili: tilinumero tilikartasta (tekstinä, esim. 4000 tai 3000)\n' +
+      '  • Debet: eurosumma numerona; käytä 0 jos rivi on vain kredit-puolella\n' +
+      '  • Kredit: eurosumma numerona; käytä 0 jos rivi on vain debet-puolella\n' +
+      '  • Selite: vapaa teksti (esim. “Myynti”, “Pankki”)\n' +
+      '- Desimaalierotin voi olla pilkku tai piste.\n' +
+      '- Yksi rivi = yksi vientirivi samassa tositteessa.\n' +
+      '- Tyhjä rivi erottaa toisistaan eri tositteet: uusi tosite alkaa tyhjän rivin jälkeen.\n' +
+      '- Jokaisen tositteen päivämäärä otetaan kyseisen lohkon ensimmäisen rivin päivästä.\n' +
+      '- Jokaisen tositteen viennit pitää täsmätä: debetit ja kreditit yhteensä.\n\n' +
+      'ESIMERKKI (kaksi tositetta):\n\n' +
+      'Päivä;Tili;Debet;Kredit;Selite\n' +
+      pStart + ';1900;100;0;Kassa\n' +
+      pStart + ';3000;0;100;Myynti\n' +
+      '\n' +
+      pStart + ';1100;50;0;Pankki\n' +
+      pStart + ';3000;0;50;Myynti\n\n' +
+      'Vastaa vain CSV-tekstinä (ja tarvittaessa tyhjillä riveillä eroteltuina tositteina), ilman markdownia, ilman koodilohkoja ja ilman selityksiä ennen tai jälkeen, jotta voin liittää tuloksen suoraan TiliWebiin.'
+    );
+  }
+
+  function copyTextToClipboard(text, okMessage) {
+    const msg = okMessage || 'Kopioitu leikepöydälle.';
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(function () { alert(msg); }).catch(function () {
+        fallbackCopyTextToClipboard(text, msg);
+      });
+    } else {
+      fallbackCopyTextToClipboard(text, msg);
+    }
+  }
+
+  function fallbackCopyTextToClipboard(text, okMessage) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      alert(okMessage || 'Kopioitu leikepöydälle.');
+    } catch (e) {
+      alert('Kopiointi epäonnistui. Valitse teksti käsin.');
+    }
+    document.body.removeChild(ta);
+  }
+
   window.openBulkImportPanel = function () {
     const period = getPeriod();
     if (!period) { alert('Valitse tilikausi ensin.'); return; }
@@ -116,7 +194,7 @@
       }
 
       const bulkMode = (document.querySelector('input[name="bulkImportMode"]:checked') || {}).value || 'end';
-      var existing = getDocumentsForDocType(period.id, docTypeId);
+      var existing = getDocumentsForDocTypeStrict(period.id, docTypeId);
       const accounts = getAccounts();
       let created = 0;
       let errors = [];
@@ -241,7 +319,14 @@
       if (errors.length) alert('Tuo valmis. Varoitukset:\n' + errors.slice(0, 10).join('\n') + (errors.length > 10 ? '\n…' : ''));
       else if (created > 0) alert('Tuotu ' + created + ' tositetta.');
     };
-    const overlay = openPanel('Luo useita tositteita kerralla', html, [importBtn, closeBtn]);
+    const copyAiBtn = document.createElement('button');
+    copyAiBtn.type = 'button';
+    copyAiBtn.className = 'btn';
+    copyAiBtn.textContent = 'Kopioi prompti AI:lle';
+    copyAiBtn.onclick = function () {
+      copyTextToClipboard(getBulkImportAiPrompt(period), 'Prompti kopioitu leikepöydälle.');
+    };
+    const overlay = openPanel('Luo useita tositteita kerralla', html, [copyAiBtn, importBtn, closeBtn]);
   };
 
   /**
@@ -1001,16 +1086,53 @@
     const period = getPeriod();
     if (!period) { alert('Valitse ensin tilikausi.'); return; }
     const balances = getStartingBalances(period.id);
+    const prevResult = computeOpeningBalancesFromPreviousPeriodClosing(period);
+    const suggestedByAccountId = {};
+    if (prevResult && prevResult.balances) {
+      Object.keys(prevResult.balances).forEach(function (k) {
+        suggestedByAccountId[k] = prevResult.balances[k];
+      });
+    }
+
+    function getSuggestedAmounts(accountId) {
+      const s = suggestedByAccountId[accountId];
+      return {
+        debit: s ? (parseFloat(s.debit) || 0) : 0,
+        credit: s ? (parseFloat(s.credit) || 0) : 0
+      };
+    }
+
     const accounts = getAccounts();
-    let html = '<p>Tilikausi: ' + formatDate(period.startDate) + ' – ' + formatDate(period.endDate) + '</p>';
-    html += '<table class="data-table"><thead><tr><th>Tili</th><th>Alkusaldo debet</th><th>Alkusaldo kredit</th></tr></thead><tbody>';
-    accounts.forEach(a => {
-      const b = balances[a.id] || {};
-      const deb = b.debit != null ? b.debit : '';
-      const cred = b.credit != null ? b.credit : '';
+    let html = '<p style="margin:0 0 10px;">Tilikausi: ' + formatDate(period.startDate) + ' – ' + formatDate(period.endDate) + '</p>';
+    if (prevResult && prevResult.previousPeriod) {
+      html += '<p style="margin:0 0 12px;font-size:0.88rem;color:var(--text-muted);">Ehdotetut arvot lasketaan edellisen tilikauden (' +
+        formatDate(prevResult.previousPeriod.startDate) + ' – ' + formatDate(prevResult.previousPeriod.endDate) + ') loppusaldosta (kuten Pääkirjassa).</p>';
+    }
+    html += '<p style="margin:0 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+      '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
+      '<input type="checkbox" id="sb-hide-empty">' +
+      '<span>Älä näytä tyhjiä</span></label></p>';
+    html += '<table class="data-table sb-starting-balances-table"><thead><tr><th>Tili</th><th>Alkusaldo debet</th><th>Alkusaldo kredit</th></tr></thead><tbody>';
+    accounts.forEach(function (a) {
+      const sug = getSuggestedAmounts(a.id);
+      const saved = balances[a.id];
+      let debStr = '';
+      let credStr = '';
+      if (saved && (saved.debit || saved.credit)) {
+        debStr = saved.debit ? formatNum(saved.debit) : '';
+        credStr = saved.credit ? formatNum(saved.credit) : '';
+      } else {
+        debStr = sug.debit ? formatNum(sug.debit) : '';
+        credStr = sug.credit ? formatNum(sug.credit) : '';
+      }
+      const hintStyle = 'font-size:0.78rem;color:var(--text-muted);white-space:nowrap;';
       html += '<tr data-account-id="' + a.id + '"><td>' + (a.number || '') + ' ' + (a.name || '') + '</td>';
-      html += '<td><input type="text" class="sb-debit" value="' + deb + '"></td>';
-      html += '<td><input type="text" class="sb-credit" value="' + cred + '"></td></tr>';
+      html += '<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+        '<input type="text" class="sb-debit" value="' + debStr + '">' +
+        '<span class="sb-edited-debit" style="' + hintStyle + '" hidden>käyttäjän muokkaama</span></div></td>';
+      html += '<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+        '<input type="text" class="sb-credit" value="' + credStr + '">' +
+        '<span class="sb-edited-credit" style="' + hintStyle + '" hidden>käyttäjän muokkaama</span></div></td></tr>';
     });
     html += '</tbody></table>';
     const closeBtn = document.createElement('button');
@@ -1033,7 +1155,44 @@
       closePanel();
       refreshApp();
     };
-    openPanel('Alkusaldot', html, [saveBtn, closeBtn]);
+    const overlay = openPanel('Alkusaldot', html, [saveBtn, closeBtn]);
+
+    function updateRowMarkers(tr) {
+      const accountId = parseInt(tr.dataset.accountId, 10);
+      const sug = getSuggestedAmounts(accountId);
+      const deb = parseNum(tr.querySelector('.sb-debit').value);
+      const cred = parseNum(tr.querySelector('.sb-credit').value);
+      const debHint = tr.querySelector('.sb-edited-debit');
+      const credHint = tr.querySelector('.sb-edited-credit');
+      debHint.hidden = Math.abs(deb - sug.debit) < 0.005;
+      credHint.hidden = Math.abs(cred - sug.credit) < 0.005;
+    }
+
+    function applyHideEmpty() {
+      const hide = overlay.querySelector('#sb-hide-empty');
+      const on = hide && hide.checked;
+      overlay.querySelectorAll('tbody tr').forEach(function (tr) {
+        const deb = parseNum(tr.querySelector('.sb-debit').value);
+        const cred = parseNum(tr.querySelector('.sb-credit').value);
+        const empty = Math.abs(deb) < 0.005 && Math.abs(cred) < 0.005;
+        tr.style.display = on && empty ? 'none' : '';
+      });
+    }
+
+    function refreshStartingBalancesPanelUi() {
+      overlay.querySelectorAll('tbody tr').forEach(updateRowMarkers);
+      applyHideEmpty();
+    }
+
+    overlay.querySelectorAll('tbody tr').forEach(updateRowMarkers);
+    applyHideEmpty();
+    overlay.addEventListener('input', function (e) {
+      const t = e.target;
+      if (!t.classList || (!t.classList.contains('sb-debit') && !t.classList.contains('sb-credit'))) return;
+      refreshStartingBalancesPanelUi();
+    });
+    const hideChk = overlay.querySelector('#sb-hide-empty');
+    if (hideChk) hideChk.addEventListener('change', applyHideEmpty);
   };
 
   window.openCheckBalancesPanel = function () {
