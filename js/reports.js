@@ -15,7 +15,44 @@
     return formatNum(n);
   }
 
+  function _reportBaseUrl() {
+    // Strip filename (or last path segment) from current URL.
+    return String(window.location.href || '').replace(/\/[^/]*$/, '/');
+  }
+
+  function openReportPopup(title, bodyHtml) {
+    const base = _reportBaseUrl();
+    const w = window.open('', '_blank');
+    if (!w) {
+      alert('Ponnahdusikkuna estettiin. Salli ponnahdusikkunat tälle sivulle.');
+      return false;
+    }
+    const safeTitle = String(title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    w.document.open();
+    w.document.write(
+      '<!doctype html><html><head>' +
+      '<meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<base href="' + base + '">' +
+      '<title>' + safeTitle + '</title>' +
+      '<link rel="stylesheet" href="css/app.css">' +
+      '<style>body{margin:18px;} .report-view{max-width:980px;margin:0 auto;}</style>' +
+      '</head><body>' +
+      '<div class="report-view">' + bodyHtml + '</div>' +
+      '</body></html>'
+    );
+    w.document.close();
+    try { w.focus(); } catch (_) {}
+    return true;
+  }
+
   function showReportInPanel(title, html) {
+    const popupEnabled = getSetting('reportPopup', 'false') === 'true';
+    if (popupEnabled) {
+      openReportPopup(title, html);
+      return;
+    }
+
     const container = document.getElementById('panelContainer');
     container.innerHTML = '';
     const overlay = document.createElement('div');
@@ -23,11 +60,22 @@
     overlay.innerHTML = '<div class="panel" style="max-width: 900px; width: 90%;">' +
       '<div class="panel-title">' + title + '</div>' +
       '<div class="panel-body report-view">' + html + '</div>' +
-      '<div class="panel-footer"><button type="button" class="btn btn-primary" id="btnPrintReport">Tulosta</button> <button type="button" class="btn" id="btnCloseReport">Sulje</button></div></div>';
+      '<div class="panel-footer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+        '<button type="button" class="btn btn-primary" id="btnPrintReport">Tulosta</button>' +
+        '<button type="button" class="btn" id="btnOpenPopupReport">Avaa ponnahdusikkunassa</button>' +
+        '<label style="margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap;">' +
+          '<input type="checkbox" id="chkReportPopup"> Avaa ponnahdusikkunassa (oletus)' +
+        '</label>' +
+        '<button type="button" class="btn" id="btnCloseReport">Sulje</button>' +
+      '</div></div>';
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
     overlay.querySelector('#btnCloseReport').onclick = () => overlay.remove();
     overlay.querySelector('#btnPrintReport').onclick = () => window.print();
+    overlay.querySelector('#btnOpenPopupReport').onclick = () => openReportPopup(title, html);
+    const chk = overlay.querySelector('#chkReportPopup');
+    chk.checked = getSetting('reportPopup', 'false') === 'true';
+    chk.onchange = function () { setSetting('reportPopup', this.checked ? 'true' : 'false'); };
     container.appendChild(overlay);
   }
 
@@ -644,12 +692,45 @@
     const period = getPeriod();
     if (!period) { alert('Valitse tilikausi.'); return; }
     const settings = getSettings();
-    const documents = getDocuments(period.id, null);
+    const sortBy = (arguments && arguments.length ? arguments[0] : null) || getSetting('journalSort', 'date');
+    const documents = (getDocuments(period.id, null) || []).slice();
+
+    function num(v) {
+      const n = parseInt(v, 10);
+      return isNaN(n) ? 0 : n;
+    }
+
+    if (sortBy === 'number') {
+      documents.sort((a, b) => {
+        const dn = num(a.number) - num(b.number);
+        if (dn) return dn;
+        const dd = String(a.date || '').localeCompare(String(b.date || ''));
+        if (dd) return dd;
+        return (a.id || 0) - (b.id || 0);
+      });
+    } else {
+      // Default: sort by date
+      documents.sort((a, b) => {
+        const dd = String(a.date || '').localeCompare(String(b.date || ''));
+        if (dd) return dd;
+        const dn = num(a.number) - num(b.number);
+        if (dn) return dn;
+        return (a.id || 0) - (b.id || 0);
+      });
+    }
+
     let html = '<h2>Päiväkirja</h2><p>' + (settings.name || '') + '</p>';
     html += '<p>Tilikausi: ' + period.startDate + ' - ' + period.endDate + '</p>';
+    html += '<p style="margin: 10px 0 16px;">' +
+      '<label>Järjestys: ' +
+      '<select onchange="setSetting(\'journalSort\', this.value); openReportJournal(this.value)">' +
+      '<option value="date"' + (sortBy === 'date' ? ' selected' : '') + '>Päivämäärä</option>' +
+      '<option value="number"' + (sortBy === 'number' ? ' selected' : '') + '>Tositenumero</option>' +
+      '</select></label>' +
+      '</p>';
     html += '<table><thead><tr><th>Pvm</th><th>Tositenro</th><th>Tili</th><th>Selite</th><th class="text-right">Debet</th><th class="text-right">Kredit</th></tr></thead><tbody>';
     documents.forEach(doc => {
-      getEntriesByDocument(doc.id).forEach(e => {
+      (getEntriesByDocument(doc.id) || []).forEach(e => {
         const acc = getAccountById(e.accountId);
         const accStr = acc ? acc.number + ' ' + acc.name : '';
         const deb = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
