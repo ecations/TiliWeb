@@ -32,6 +32,18 @@
     return s.currentPeriodId ? getPeriodById(s.currentPeriodId) : null;
   }
 
+  /** Fiscal period of the document shown in the main editor (for frozen tilikartta when locked). */
+  function getActiveDocumentPeriodId() {
+    if (!state.document) return null;
+    return state.document.periodId != null ? state.document.periodId : (getPeriod() && getPeriod().id);
+  }
+
+  function accountForDocView(accountId) {
+    return typeof getAccountByIdForPeriod === 'function'
+      ? getAccountByIdForPeriod(accountId, getActiveDocumentPeriodId())
+      : getAccountById(accountId);
+  }
+
   function getDocType() {
     const s = getSettings();
     return s.documentTypeId ? getDocumentTypeById(s.documentTypeId) : null;
@@ -113,10 +125,88 @@
 
   function isDocumentEditable() {
     if (!state.document) return false;
-    const period = getPeriod();
-    if (!period || period.locked) return false;
+    const docPeriod = state.document.periodId != null ? getPeriodById(state.document.periodId) : getPeriod();
+    if (!docPeriod) return false;
+    if (docPeriod.locked) return false;
     if (state.document.id <= 0) return true;
-    return !isPeriodLocked(period, state.document.date);
+    return !isPeriodLocked(docPeriod, state.document.date);
+  }
+
+  /** Nykyinen valittu tilikausi (tositeluettelo) on lukittu — pääikkunan muokkaus estetään. */
+  function isCurrentPeriodLocked() {
+    const p = getPeriod();
+    return !!(p && p.locked);
+  }
+
+  const LOCKED_PERIOD_NOTICE =
+    'Tätä toimintoa ei voi käyttää, koska kyseinen tilikausi on lukittu tilikausien luettelossa. Jos haluat muokata arvoja, käy ensin poistamassa lukitus tilikausien luettelosta.';
+
+  let _lockedNoticeAt = 0;
+  function showLockedPeriodNotice() {
+    const now = Date.now();
+    if (now - _lockedNoticeAt < 450) return;
+    _lockedNoticeAt = now;
+    const el = document.getElementById('appLockedHint');
+    if (!el) {
+      alert(LOCKED_PERIOD_NOTICE);
+      return;
+    }
+    el.textContent = LOCKED_PERIOD_NOTICE;
+    el.classList.remove('hidden');
+    clearTimeout(showLockedPeriodNotice._hide);
+    showLockedPeriodNotice._hide = setTimeout(function () {
+      el.classList.add('hidden');
+    }, 7000);
+  }
+
+  function installLockedPeriodUi() {
+    const header = document.querySelector('.header-menu-row');
+    const toolbar = document.querySelector('.toolbar');
+    let hoverTimer = null;
+    function scheduleHint() {
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(function () {
+        showLockedPeriodNotice();
+      }, 550);
+    }
+    function cancelHover() {
+      clearTimeout(hoverTimer);
+    }
+    [header, toolbar].forEach(function (el) {
+      if (!el) return;
+      el.addEventListener('mouseover', function (e) {
+        const t = e.target.closest('.btn-locked-blocked, .menu-item-locked-blocked');
+        if (!t) return;
+        scheduleHint();
+      });
+      el.addEventListener('mouseout', function (e) {
+        const t = e.target.closest('.btn-locked-blocked, .menu-item-locked-blocked');
+        if (t && (!e.relatedTarget || !t.contains(e.relatedTarget))) cancelHover();
+      });
+    });
+    if (header) {
+      header.addEventListener('click', function (e) {
+        const btn = e.target.closest('button.menu-item-locked-blocked');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        document.querySelectorAll('.menu-dropdown').forEach(function (d) {
+          d.classList.add('hidden');
+        });
+        showLockedPeriodNotice();
+      }, true);
+    }
+    if (toolbar) {
+      toolbar.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-locked-blocked');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        showLockedPeriodNotice();
+      }, true);
+    }
   }
 
   function loadDocuments() {
@@ -133,7 +223,7 @@
         const entries = getEntriesByDocument(d.id);
         const matchNum = String(d.number || '').includes(q);
         const matchEntry = entries.some(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = getAccountByIdForPeriod(e.accountId, period.id);
           const desc = (e.description || '').toLowerCase();
           return (acc && (acc.number.toLowerCase().includes(q) || acc.name.toLowerCase().includes(q))) || desc.includes(q);
         });
@@ -158,7 +248,7 @@
         const entries = getEntriesByDocument(d.id);
         const matchNum = String(d.number || '').includes(q);
         const matchEntry = entries.some(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = getAccountByIdForPeriod(e.accountId, period.id);
           const desc = (e.description || '').toLowerCase();
           return (acc && (acc.number.toLowerCase().includes(q) || acc.name.toLowerCase().includes(q))) || desc.includes(q);
         });
@@ -447,6 +537,10 @@
     const period = getPeriod();
     const docType = getDocType();
     if (!period || !docType) { alert('Valitse tilikausi ja tositelaji.'); return; }
+    if (period.locked) {
+      showLockedPeriodNotice();
+      return;
+    }
 
     const currentDocNumber = state.document && state.document.number != null ? parseInt(state.document.number, 10) : null;
     const isInMiddle = state.document && state.document.id != null && state.documentIndex < state.documents.length - 1 && currentDocNumber != null && !isNaN(currentDocNumber);
@@ -462,7 +556,12 @@
   }
 
   function deleteCurrentDocument() {
-    if (!state.document || !confirm('Poistetaan tosite?')) return;
+    if (!state.document) return;
+    if (!isDocumentEditable()) {
+      if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+      return;
+    }
+    if (!confirm('Poistetaan tosite?')) return;
     if (state.document.id) {
       deleteDocument(state.document.id);
     }
@@ -553,7 +652,7 @@
           entries.forEach(e => matchingIds.add(e.id));
         }
         entries.forEach(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = getAccountByIdForPeriod(e.accountId, period.id);
           const desc = (e.description || '').toLowerCase();
           if ((acc && (String(acc.number).toLowerCase().includes(ql) || acc.name.toLowerCase().includes(ql))) || desc.includes(ql)) {
             matchingIds.add(e.id);
@@ -619,7 +718,7 @@
           '</tr></thead><tbody>';
 
         r.entries.forEach(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = getAccountByIdForPeriod(e.accountId, r.period.id);
           const accStr = acc ? (acc.number + ' ' + acc.name) : '–';
           const deb = parseFloat(e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0)) || 0;
           const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
@@ -690,7 +789,11 @@
   }
 
   function addEntry() {
-    if (!isDocumentEditable()) return;
+    if (!state.document) return;
+    if (!isDocumentEditable()) {
+      if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+      return;
+    }
 
     // Read the current visible totals directly from the DOM so we get gross amounts
     // (net + VAT) exactly as shown, then pre-fill the balancing side on the new row.
@@ -741,7 +844,10 @@
   }
 
   function removeEntriesAtIndices(indices) {
-    if (!isDocumentEditable()) return;
+    if (!isDocumentEditable()) {
+      if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+      return;
+    }
     const uniq = [...new Set(indices)]
       .filter(function (i) { return i >= 0 && i < state.entries.length; })
       .sort(function (a, b) { return b - a; });
@@ -755,7 +861,10 @@
   }
 
   function removeEntry(rowIndex) {
-    if (!isDocumentEditable()) return;
+    if (!isDocumentEditable()) {
+      if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+      return;
+    }
     state.entries.splice(rowIndex, 1);
     state.entries.forEach((e, i) => e.rowNumber = i);
     state.changed = true;
@@ -868,7 +977,7 @@
     const reverseRows = [];
     const nonVatCreditRows = [];
     state.entries.forEach((e, i) => {
-      const acc0 = e.accountId ? getAccountById(e.accountId) : null;
+      const acc0 = e.accountId ? accountForDocView(e.accountId) : null;
       const vat0 = e.vatAmount != null ? e.vatAmount : 0;
       const netCredit0 = e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0);
       if (isReverseChargeVat(acc0) && vat0 > 0) reverseRows.push({ index: i, vat: vat0 });
@@ -884,7 +993,7 @@
   }
 
   function getDisplayAmountsForTotals(entry, rowIndex, dist) {
-    const acc = entry.accountId ? getAccountById(entry.accountId) : null;
+    const acc = entry.accountId ? accountForDocView(entry.accountId) : null;
     const netDebit = entry.amountDebit != null ? entry.amountDebit : (entry.debit ? (entry.amount || 0) : 0);
     const netCredit = entry.amountCredit != null ? entry.amountCredit : (!entry.debit ? (entry.amount || 0) : 0);
     const vatAmt = entry.vatAmount != null ? entry.vatAmount : 0;
@@ -942,7 +1051,7 @@
   }
 
   function copySelectedEntries() {
-    if (!state.document || !isDocumentEditable()) return;
+    if (!state.document) return;
     const indices = state.selectedEntryIndices.slice().sort(function (a, b) { return a - b; })
       .filter(function (i) { return i >= 0 && i < state.entries.length; });
     if (!indices.length) return;
@@ -961,7 +1070,11 @@
   }
 
   function pasteEntries() {
-    if (!state.document || !isDocumentEditable()) return;
+    if (!state.document) return;
+    if (!isDocumentEditable()) {
+      if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+      return;
+    }
     if (!state.entriesClipboard || state.entriesClipboard.length === 0) {
       return;
     }
@@ -1026,6 +1139,7 @@
     const docType = getDocType();
     const hasData = period && docType && state.documents.length >= 0;
     const canEdit = isDocumentEditable();
+    const periodLocked = isCurrentPeriodLocked();
 
     const btnFirst = document.getElementById('btnFirst');
     const btnLast = document.getElementById('btnLast');
@@ -1035,10 +1149,57 @@
     document.getElementById('btnNext').disabled = isLast;
     if (btnFirst) { btnFirst.disabled = isFirst; btnFirst.classList.toggle('btn-at-edge', hasData && isFirst); }
     if (btnLast)  { btnLast.disabled  = isLast;  btnLast.classList.toggle('btn-at-edge',  hasData && isLast); }
-    document.getElementById('btnNewDoc').disabled = !period || !docType || (period.locked);
-    document.getElementById('btnDeleteDoc').disabled = !state.document || !canEdit;
-    document.getElementById('btnAddEntry').disabled = !canEdit;
-    document.getElementById('btnRemoveEntry').disabled = !canEdit || state.entries.length === 0;
+
+    const btnNew = document.getElementById('btnNewDoc');
+    const newGrey = !!(period && docType && periodLocked);
+    btnNew.disabled = !period || !docType;
+    btnNew.classList.toggle('btn-locked-blocked', newGrey);
+
+    const docEditBlocked = !!(state.document && periodLocked && !canEdit);
+    const btnDel = document.getElementById('btnDeleteDoc');
+    btnDel.disabled = !state.document || (!canEdit && !docEditBlocked);
+    btnDel.classList.toggle('btn-locked-blocked', docEditBlocked);
+
+    const btnAdd = document.getElementById('btnAddEntry');
+    btnAdd.disabled = !state.document || (!canEdit && !docEditBlocked);
+    btnAdd.classList.toggle('btn-locked-blocked', docEditBlocked);
+
+    const noEntries = state.entries.length === 0;
+    const btnRem = document.getElementById('btnRemoveEntry');
+    btnRem.disabled = noEntries || (!canEdit && !docEditBlocked);
+    btnRem.classList.toggle('btn-locked-blocked', docEditBlocked && !noEntries);
+
+    const btnSave = document.getElementById('btnSave');
+    const saveGrey = docEditBlocked;
+    btnSave.disabled = !state.document || (!canEdit && !saveGrey);
+    btnSave.classList.toggle('btn-locked-blocked', saveGrey);
+  }
+
+  /** Muokkausvalikon kohteet, joita ei voi käyttää lukitulla tilikaudella. */
+  function renderLockedMenuItems() {
+    const pl = isCurrentPeriodLocked();
+    const ids = [
+      'menuCoa',
+      'menuLoadTilikarttamalli',
+      'menuStartingBalances',
+      'menuCreateTemplateFromDocument',
+      'menuEditEntryTemplates',
+      'menuRaporttipohja',
+      'menuBulkImport',
+      'menuDocumentNumberShift',
+      'menuCheckBalances'
+    ];
+    ids.forEach(function (id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('menu-item-locked-blocked', pl);
+    });
+    const pasteEl = document.getElementById('menuPasteEntries');
+    if (pasteEl) {
+      const noClip = !state.entriesClipboard || state.entriesClipboard.length === 0;
+      pasteEl.disabled = noClip && !pl;
+      pasteEl.classList.toggle('menu-item-locked-blocked', pl || noClip);
+    }
   }
 
   function renderDocForm() {
@@ -1090,7 +1251,7 @@
     const reverseRows = [];
     const nonVatCreditRows = [];
     state.entries.forEach((e, i) => {
-      const acc0 = e.accountId ? getAccountById(e.accountId) : null;
+      const acc0 = e.accountId ? accountForDocView(e.accountId) : null;
       const vat0 = e.vatAmount != null ? e.vatAmount : 0;
       const netDebit0 = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
       const netCredit0 = e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0);
@@ -1109,7 +1270,8 @@
     state.entries.forEach((entry, rowIndex) => {
       const tr = document.createElement('tr');
       tr.setAttribute('data-row-index', rowIndex);
-      if (canEdit) {
+      // Rivivalinta toimii myös lukitulla kaudella (kopiointi ei-lukittuun kauteen).
+      if (state.document) {
         tr.addEventListener('click', function (e) {
           if (e.target.closest('input') || e.target.closest('.picker-trigger')) return;
           const anchor = state.entrySelectionAnchorIndex;
@@ -1127,7 +1289,7 @@
         });
       }
       tr.classList.toggle('selected', entryRowIndexSelected(rowIndex));
-      const acc = entry.accountId ? getAccountById(entry.accountId) : null;
+      const acc = entry.accountId ? accountForDocView(entry.accountId) : null;
       const accText = acc ? acc.number + ' ' + acc.name : '— Valitse tili —';
 
       const accountPicker = document.createElement('span');
@@ -1328,7 +1490,7 @@
 
   function suggestLabel(rows) {
     return rows.slice(0, 3).map(function (e) {
-      const acc = getAccountById(e.accountId);
+      const acc = accountForDocView(e.accountId);
       const name = acc ? (acc.number + ' ' + acc.name) : ('tili ' + e.accountId);
       return name.length > 26 ? name.slice(0, 24) + '…' : name;
     }).join(', ') + (rows.length > 3 ? ' +' + (rows.length - 3) + ' muuta' : '');
@@ -1676,8 +1838,7 @@
     renderStatusBar();
     renderDocumentTypeSelect();
     renderEntryTemplateMenu();
-    const pasteBtn = document.getElementById('menuPasteEntries');
-    if (pasteBtn) pasteBtn.disabled = !state.entriesClipboard || state.entriesClipboard.length === 0;
+    renderLockedMenuItems();
   }
 
   function init() {
@@ -1704,6 +1865,10 @@
 
     document.getElementById('btnSave').onclick = () => {
       if (!state.document) return;
+      if (!isDocumentEditable()) {
+        if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+        return;
+      }
       const period = getPeriod();
       if (!state.document.date || (period && (state.document.date < period.startDate || state.document.date > period.endDate))) {
         alert('Päivämäärä ei kuulu tilikaudelle.');
@@ -1743,6 +1908,11 @@
       // Escape: close any open panel/overlay.
       if (e.key === 'Escape') {
         const overlay = document.querySelector('.panel-overlay');
+        if (overlay && typeof window._tilitinCoaRequestClose === 'function') {
+          window._tilitinCoaRequestClose();
+          e.preventDefault();
+          return;
+        }
         if (overlay) { overlay.remove(); e.preventDefault(); return; }
         const dropdowns = document.querySelectorAll('.menu-dropdown:not(.hidden)');
         if (dropdowns.length) { dropdowns.forEach(d => d.classList.add('hidden')); e.preventDefault(); return; }
@@ -1764,6 +1934,10 @@
         case 's': // Ctrl+S → save
           e.preventDefault();
           if (!state.document) return;
+          if (!isDocumentEditable()) {
+            if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+            return;
+          }
           if (state.document.number == null) state.document.number = parseInt(document.getElementById('docNumber').value, 10) || 1;
           if (state.document.date == null) state.document.date = getDocDateYmd();
           saveDocumentToStore();
@@ -1771,6 +1945,10 @@
           break;
         case 'n': // Ctrl+N → new tosite
           e.preventDefault();
+          if (isCurrentPeriodLocked()) {
+            showLockedPeriodNotice();
+            return;
+          }
           createNewDocument();
           break;
         case 'c': // Ctrl+C → copy selected entry
@@ -1779,6 +1957,11 @@
           break;
         case 'v': // Ctrl+V → paste entry
           e.preventDefault();
+          if (!state.document) return;
+          if (!isDocumentEditable()) {
+            if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+            return;
+          }
           pasteEntries();
           break;
         case 'f': // Ctrl+F → toggle search
@@ -1792,7 +1975,15 @@
       }
 
       // Ctrl+Delete → delete tosite
-      if (e.key === 'Delete') { e.preventDefault(); deleteCurrentDocument(); }
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        if (!state.document) return;
+        if (!isDocumentEditable()) {
+          if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+          return;
+        }
+        deleteCurrentDocument();
+      }
     });
 
     // F8 or Insert → add entry (outside inputs only).
@@ -1800,9 +1991,22 @@
       const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
       const inInput = tag === 'input' || tag === 'textarea' || tag === 'select';
       if (inInput) return;
-      if (e.key === 'F8' || e.key === 'Insert') { e.preventDefault(); addEntry(); render(); }
+      if (e.key === 'F8' || e.key === 'Insert') {
+        e.preventDefault();
+        if (!state.document) return;
+        if (!isDocumentEditable()) {
+          if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+          return;
+        }
+        addEntry();
+        render();
+      }
       if (e.key === 'Delete' && !e.ctrlKey) {
         e.preventDefault();
+        if (!state.document || !isDocumentEditable()) {
+          if (isCurrentPeriodLocked()) showLockedPeriodNotice();
+          return;
+        }
         if (state.selectedEntryIndices.length) {
           removeEntriesAtIndices(state.selectedEntryIndices.slice());
         }
@@ -1941,6 +2145,7 @@
       window.openLicensePanel && window.openLicensePanel();
     };
 
+    installLockedPeriodUi();
     render();
   }
 
@@ -2083,7 +2288,8 @@
 
       filteredDocs.forEach(doc => {
         getEntriesByDocument(doc.id).forEach(e => {
-          const acc = e.accountId ? getAccountById(e.accountId) : null;
+          const pid = doc.periodId != null ? doc.periodId : period.id;
+          const acc = e.accountId ? getAccountByIdForPeriod(e.accountId, pid) : null;
           const debit  = parseFloat(e.amountDebit  != null ? e.amountDebit  : (e.debit  ? (e.amount || 0) : 0)) || 0;
           const credit = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
           const vat    = parseFloat(e.vatAmount) || 0;

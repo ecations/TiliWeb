@@ -79,6 +79,69 @@ function getAccountById(id) {
   return getAccounts().find(a => a.id === id);
 }
 
+/** Frozen tilikartta snapshot per locked fiscal period (localStorage). */
+function getPeriodCoaSnapshot(periodId) {
+  if (periodId == null) return null;
+  try {
+    const s = localStorage.getItem(APP_KEY + 'period_coa_snapshot_' + periodId);
+    return s ? JSON.parse(s) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function savePeriodCoaSnapshot(periodId, data) {
+  if (periodId == null) return;
+  localStorage.setItem(APP_KEY + 'period_coa_snapshot_' + periodId, JSON.stringify(data));
+}
+
+function deletePeriodCoaSnapshot(periodId) {
+  if (periodId == null) return;
+  localStorage.removeItem(APP_KEY + 'period_coa_snapshot_' + periodId);
+}
+
+function buildPeriodCoaSnapshotFromAccounts() {
+  const out = {};
+  getAccounts().forEach(function (a) {
+    out[a.id] = {
+      number: a.number,
+      name: a.name,
+      type: a.type,
+      vatCode: a.vatCode,
+      vatRate: a.vatRate,
+      vatAccount1Id: a.vatAccount1Id,
+      vatAccount2Id: a.vatAccount2Id,
+      flags: a.flags
+    };
+  });
+  return out;
+}
+
+/**
+ * Account for display/logic in a fiscal period context. Locked periods use frozen
+ * names, ALV fields and types from the snapshot taken at lock time.
+ */
+function getAccountByIdForPeriod(accountId, periodId) {
+  const acc = getAccountById(accountId);
+  if (!acc) return null;
+  if (periodId == null) return acc;
+  const period = getPeriodById(periodId);
+  if (!period || !period.locked) return acc;
+  const snap = getPeriodCoaSnapshot(periodId);
+  if (!snap || !snap[accountId]) return acc;
+  const s = snap[accountId];
+  return Object.assign({}, acc, {
+    number: s.number != null ? s.number : acc.number,
+    name: s.name != null ? s.name : acc.name,
+    type: s.type != null ? s.type : acc.type,
+    vatCode: s.vatCode != null ? s.vatCode : acc.vatCode,
+    vatRate: s.vatRate != null ? s.vatRate : acc.vatRate,
+    vatAccount1Id: s.vatAccount1Id != null ? s.vatAccount1Id : acc.vatAccount1Id,
+    vatAccount2Id: s.vatAccount2Id != null ? s.vatAccount2Id : acc.vatAccount2Id,
+    flags: s.flags != null ? s.flags : acc.flags
+  });
+}
+
 function getAccountByNumber(num) {
   return getAccounts().find(a => a.number === String(num));
 }
@@ -281,6 +344,7 @@ function savePeriod(p) {
 }
 
 function deletePeriod(id) {
+  deletePeriodCoaSnapshot(id);
   saveJson('periods', getPeriods().filter(p => p.id !== id));
 }
 
@@ -883,17 +947,18 @@ function accountIsDebitNormalForLedger(account) {
  * Document order matches ledger: getDocuments() order, entries in document order.
  */
 function computeLedgerClosingDisplayForAccount(account, periodId) {
-  const sb = getStartingBalances(periodId)[account.id] || {};
+  const acc = account && account.id != null ? getAccountByIdForPeriod(account.id, periodId) : account;
+  const sb = getStartingBalances(periodId)[acc.id] || {};
   const sbDeb = parseFloat(sb.debit) || 0;
   const sbCred = parseFloat(sb.credit) || 0;
-  const isDebitNormal = accountIsDebitNormalForLedger(account);
+  const isDebitNormal = accountIsDebitNormalForLedger(acc);
   let runningBalance = sbDeb - sbCred;
   if (!isDebitNormal) runningBalance = -runningBalance;
 
   const documents = getDocuments(periodId, null);
   documents.forEach(function (doc) {
     getEntriesByDocument(doc.id).forEach(function (e) {
-      if (e.accountId !== account.id) return;
+      if (e.accountId !== acc.id) return;
       const deb = parseFloat(e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0)) || 0;
       const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
       const delta = isDebitNormal ? (deb - cred) : (cred - deb);
@@ -935,8 +1000,9 @@ function computeOpeningBalancesFromPreviousPeriodClosing(currentPeriod) {
   const accounts = getAccounts();
   const out = {};
   accounts.forEach(function (a) {
-    const closing = computeLedgerClosingDisplayForAccount(a, prev.id);
-    const oc = closingDisplayToOpeningDebitCredit(a, closing);
+    const acc = getAccountByIdForPeriod(a.id, prev.id);
+    const closing = computeLedgerClosingDisplayForAccount(acc, prev.id);
+    const oc = closingDisplayToOpeningDebitCredit(acc, closing);
     if (oc.debit || oc.credit) out[a.id] = oc;
   });
   return { previousPeriod: prev, balances: out };

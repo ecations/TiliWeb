@@ -5,6 +5,12 @@
 (function () {
   'use strict';
 
+  function accForPeriod(accountId, periodId) {
+    return typeof getAccountByIdForPeriod === 'function'
+      ? getAccountByIdForPeriod(accountId, periodId)
+      : getAccountById(accountId);
+  }
+
   // Delegate to global formatNum from data.js (respects decimal separator setting).
   // formatNum is defined globally in data.js.
 
@@ -13,6 +19,25 @@
     const n = parseFloat(x);
     if (isNaN(n)) return '';
     return formatNum(n);
+  }
+
+  /** Tase: vastaavaa vs. vastattavaa -yhteenveto raportin alaosaan. */
+  function balanceSheetReconciliationHtml(totalAsset, totalLiabEquity) {
+    if (totalAsset == null || totalLiabEquity == null) return '';
+    const a = parseFloat(totalAsset);
+    const b = parseFloat(totalLiabEquity);
+    if (isNaN(a) || isNaN(b)) return '';
+    const diff = a - b;
+    const match = Math.abs(diff) < 0.005;
+    let s = '<div class="report-bs-recon">';
+    s += 'Vastaavaa: ' + formatFsAmount(a) + ', Vastattavaa: ' + formatFsAmount(b) + '. ';
+    if (match) {
+      s += '<span class="report-bs-recon-ok">TÄSMÄÄ!</span>';
+    } else {
+      s += '<span class="report-bs-recon-err">Erotus: ' + formatFsAmount(Math.abs(diff)) + '</span>';
+    }
+    s += '</div>';
+    return s;
   }
 
   function _reportBaseUrl() {
@@ -637,6 +662,7 @@
     html += '<table><thead><tr><th>Tili</th><th>Nimi</th><th class="text-right">Debet</th><th class="text-right">Kredit</th><th class="text-right">Saldo</th></tr></thead><tbody>';
     let totalDebit = 0, totalCredit = 0;
     accounts.forEach(a => {
+      const disp = accForPeriod(a.id, period.id);
       const sb = startingBalances[a.id] || {};
       let deb = (sb.debit || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].debit : 0);
       let cred = (sb.credit || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].credit : 0);
@@ -645,7 +671,7 @@
       totalDebit += deb;
       totalCredit += cred;
       if (hideZeroBalances && isZero) return;
-      html += '<tr><td>' + (a.number || '') + '</td><td>' + (a.name || '') + '</td><td class="rd-debit">' + formatNum(deb) + '</td><td class="rd-credit">' + formatNum(cred) + '</td><td class="rd-num">' + formatNum(saldo) + '</td></tr>';
+      html += '<tr><td>' + (disp.number || '') + '</td><td>' + (disp.name || '') + '</td><td class="rd-debit">' + formatNum(deb) + '</td><td class="rd-credit">' + formatNum(cred) + '</td><td class="rd-num">' + formatNum(saldo) + '</td></tr>';
     });
     html += '<tr class="total"><td colspan="2">Yhteensä</td><td class="rd-debit">' + formatNum(totalDebit) + '</td><td class="rd-credit">' + formatNum(totalCredit) + '</td><td class="rd-num">' + formatNum(totalDebit - totalCredit) + '</td></tr>';
     html += '</tbody></table>';
@@ -662,8 +688,9 @@
     html += '<p>Päivämäärä: ' + formatDate(doc.date) + '</p>';
     html += '<table><thead><tr><th>Tili</th><th>Selite</th><th class="text-right">Debet</th><th class="text-right">Kredit</th></tr></thead><tbody>';
     let totalDebit = 0, totalCredit = 0;
+    const docPid = doc.periodId != null ? doc.periodId : (getPeriod() && getPeriod().id);
     entries.forEach(e => {
-      const acc = getAccountById(e.accountId);
+      const acc = accForPeriod(e.accountId, docPid);
       const accStr = acc ? acc.number + ' ' + acc.name : '';
       const deb = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
       const cred = e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0);
@@ -719,7 +746,7 @@
     html += '<table><thead><tr><th>Pvm</th><th>Tositenro</th><th>Tili</th><th>Selite</th><th class="text-right">Debet</th><th class="text-right">Kredit</th></tr></thead><tbody>';
     documents.forEach(doc => {
       (getEntriesByDocument(doc.id) || []).forEach(e => {
-        const acc = getAccountById(e.accountId);
+        const acc = accForPeriod(e.accountId, period.id);
         const accStr = acc ? acc.number + ' ' + acc.name : '';
         const deb = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
         const cred = e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0);
@@ -748,6 +775,7 @@
       });
     });
     accounts.forEach(a => {
+      const aDisp = accForPeriod(a.id, period.id);
       const sb = startingBalances[a.id] || {};
       const accEntries = entriesByAccount[a.id] || [];
       const hasOpening = (sb.debit || 0) !== 0 || (sb.credit || 0) !== 0;
@@ -755,13 +783,13 @@
 
       // Running balance sign convention: debit-normal accounts (assets, expenses) →
       // positive when debit > credit; credit-normal (liabilities, equity, revenue) → positive when credit > debit.
-      const type = Number(a.type);
+      const type = Number(aDisp.type);
       const isDebitNormal = (type === 0 || type === 4 || type === 5); // asset, expense, prev-profit
 
       let runningBalance = (parseFloat(sb.debit) || 0) - (parseFloat(sb.credit) || 0);
       if (!isDebitNormal) runningBalance = -runningBalance;
 
-      html += '<h3>' + (a.number || '') + ' ' + (a.name || '') + '</h3>';
+      html += '<h3>' + (aDisp.number || '') + ' ' + (aDisp.name || '') + '</h3>';
       html += '<table><thead><tr>' +
         '<th>Pvm</th><th>Tositenro</th><th>Selite</th>' +
         '<th class="text-right">Debet</th><th class="text-right">Kredit</th>' +
@@ -810,30 +838,84 @@
     container.innerHTML = '';
     const overlay = document.createElement('div');
     overlay.className = 'panel-overlay';
-    let opts = accounts.map(a => ({ value: a.id, label: (a.number || '') + ' ' + (a.name || '') }));
-    const firstId = opts.length ? opts[0].value : 0;
-    const html = '<div class="panel" style="max-width: 420px;">' +
+    const opts = accounts.map(a => {
+      const d = accForPeriod(a.id, period.id);
+      const favourite = !!((a.flags || 0) & 1);
+      return { value: a.id, label: (d.number || '') + ' ' + (d.name || ''), favourite: favourite };
+    });
+    const html = '<div class="panel panel-tiliote-picker" style="max-width: 420px;">' +
       '<div class="panel-title">Tiliote</div>' +
-      '<div class="panel-body"><p>Valitse tili</p><select id="tilioteAccountId" style="width:100%;">' +
-      opts.map(o => '<option value="' + o.value + '">' + (o.label || '').replace(/</g, '&lt;') + '</option>').join('') +
+      '<div class="panel-body">' +
+      '<p>Valitse tili</p>' +
+      '<div class="tiliote-filter-row">' +
+      '<label for="tilioteAccountFilter">Suodata</label> ' +
+      '<input type="search" id="tilioteAccountFilter" class="tiliote-filter-input" placeholder="Tilinumero tai nimi…" autocomplete="off">' +
+      '</div>' +
+      '<p class="tiliote-fav-row"><label><input type="checkbox" id="tilioteFavouritesOnly"> Vain suosikkitilit</label></p>' +
+      '<div class="tiliote-sort-row">' +
+      '<span class="tiliote-sort-label">Järjestys</span>' +
+      '<label class="tiliote-sort-opt"><input type="radio" name="tilioteSort" value="date" checked> Aikajärjestys</label>' +
+      '<label class="tiliote-sort-opt"><input type="radio" name="tilioteSort" value="docnumber"> Tositenumerojärjestys</label>' +
+      '</div>' +
+      '<select id="tilioteAccountId" class="tiliote-account-select" size="14">' +
+      opts.map(o => '<option value="' + o.value + '" data-favourite="' + (o.favourite ? '1' : '0') + '">' +
+        (o.label || '').replace(/</g, '&lt;') + '</option>').join('') +
       '</select></div>' +
       '<div class="panel-footer"><button type="button" class="btn btn-primary" id="btnTilioteShow">Näytä</button> <button type="button" class="btn" id="btnTilioteCancel">Peruuta</button></div></div>';
     overlay.innerHTML = html;
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
+
+    const selectEl = overlay.querySelector('#tilioteAccountId');
+    const filterInput = overlay.querySelector('#tilioteAccountFilter');
+    const favOnlyEl = overlay.querySelector('#tilioteFavouritesOnly');
+
+    function applyTilioteAccountFilter() {
+      const q = (filterInput && filterInput.value ? filterInput.value : '').trim().toLowerCase();
+      const favOnly = favOnlyEl && favOnlyEl.checked;
+      let firstVisible = null;
+      selectEl.querySelectorAll('option').forEach(function (opt) {
+        const isFav = opt.getAttribute('data-favourite') === '1';
+        const txt = (opt.textContent || '').toLowerCase();
+        const matchFav = !favOnly || isFav;
+        const matchQ = !q || txt.indexOf(q) !== -1;
+        const show = matchFav && matchQ;
+        opt.hidden = !show;
+        if (show && firstVisible == null) firstVisible = opt.value;
+      });
+      const sel = selectEl.selectedOptions && selectEl.selectedOptions[0];
+      if (sel && sel.hidden && firstVisible != null) {
+        selectEl.value = firstVisible;
+      }
+    }
+
+    filterInput.addEventListener('input', applyTilioteAccountFilter);
+    favOnlyEl.addEventListener('change', applyTilioteAccountFilter);
+    applyTilioteAccountFilter();
+
     overlay.querySelector('#btnTilioteCancel').onclick = () => overlay.remove();
     overlay.querySelector('#btnTilioteShow').onclick = function () {
-      const accountId = parseInt(overlay.querySelector('#tilioteAccountId').value, 10);
+      const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+      if (!opt || opt.hidden) {
+        alert('Valitse näkyvistä tileistä tili tai muuta suodatinta.');
+        return;
+      }
+      const accountId = parseInt(selectEl.value, 10);
+      if (!accountId) { alert('Valitse tili.'); return; }
+      const sortEl = overlay.querySelector('input[name="tilioteSort"]:checked');
+      const sortMode = sortEl && sortEl.value === 'docnumber' ? 'docnumber' : 'date';
       overlay.remove();
-      runReportAccountStatement(period, accountId);
+      runReportAccountStatement(period, accountId, sortMode);
     };
     container.appendChild(overlay);
+    if (filterInput) filterInput.focus();
   };
 
-  function runReportAccountStatement(period, accountId) {
+  function runReportAccountStatement(period, accountId, sortMode) {
     const settings = getSettings();
-    const account = getAccountById(accountId);
+    const account = accForPeriod(accountId, period.id);
     if (!account) { alert('Tiliä ei löydy.'); return; }
+    if (sortMode !== 'docnumber') sortMode = 'date';
 
     // Initialise running balance from opening balance (alkusaldo).
     // AccountBalances uses signed balance: positive = debit-normal, negative = credit-normal.
@@ -848,19 +930,47 @@
     const openingBalance = ab.getBalance(accountId) || 0;
 
     const documents = getDocuments(period.id, null);
+    const items = [];
+    documents.forEach(function (doc) {
+      getEntriesByDocument(doc.id).filter(function (e) { return e.accountId === accountId; }).forEach(function (e) {
+        items.push({ doc: doc, entry: e });
+      });
+    });
+
+    function docNumKey(doc) {
+      const n = parseInt(doc.number, 10);
+      return isNaN(n) ? 0 : n;
+    }
+    items.sort(function (a, b) {
+      const da = String(a.doc.date || '');
+      const db = String(b.doc.date || '');
+      const na = docNumKey(a.doc);
+      const nb = docNumKey(b.doc);
+      const ra = a.entry.rowNumber != null ? a.entry.rowNumber : 0;
+      const rb = b.entry.rowNumber != null ? b.entry.rowNumber : 0;
+      if (sortMode === 'docnumber') {
+        if (na !== nb) return na - nb;
+        if (da !== db) return da.localeCompare(db);
+        return ra - rb;
+      }
+      if (da !== db) return da.localeCompare(db);
+      if (na !== nb) return na - nb;
+      return ra - rb;
+    });
+
     const rows = [];
     let debitTotal = 0, creditTotal = 0;
 
-    documents.forEach(doc => {
-      getEntriesByDocument(doc.id).filter(e => e.accountId === accountId).forEach(e => {
-        const deb  = parseFloat(e.amountDebit  != null ? e.amountDebit  : (e.debit  ? (e.amount || 0) : 0)) || 0;
-        const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
-        ab.addEntry(e);
-        const runBalance = ab.getBalance(accountId) || 0;
-        if (deb  > 0) debitTotal  += deb;
-        if (cred > 0) creditTotal += cred;
-        rows.push({ date: doc.date, number: doc.number, description: e.description || '', debit: deb, credit: cred, balance: runBalance });
-      });
+    items.forEach(function (item) {
+      const doc = item.doc;
+      const e = item.entry;
+      const deb  = parseFloat(e.amountDebit  != null ? e.amountDebit  : (e.debit  ? (e.amount || 0) : 0)) || 0;
+      const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
+      ab.addEntry(e);
+      const runBalance = ab.getBalance(accountId) || 0;
+      if (deb  > 0) debitTotal  += deb;
+      if (cred > 0) creditTotal += cred;
+      rows.push({ date: doc.date, number: doc.number, description: e.description || '', debit: deb, credit: cred, balance: runBalance });
     });
 
     // Format a signed balance – delegates to global formatNum.
@@ -875,6 +985,7 @@
     let html = '<h2>Tiliote</h2><p>' + (settings.name || '') + '</p>';
     html += '<p><strong>' + (account.number || '') + ' ' + (account.name || '') + '</strong></p>';
     html += '<p>Tilikausi: ' + period.startDate + ' – ' + period.endDate + '</p>';
+    html += '<p>Järjestys: ' + (sortMode === 'docnumber' ? 'Tositenumerojärjestys' : 'Aikajärjestys') + '</p>';
     html += '<table><thead><tr>' +
       '<th>Pvm</th><th>Nro</th><th>Selite</th>' +
       '<th class="text-right">Debet</th><th class="text-right">Kredit</th>' +
@@ -933,12 +1044,13 @@
     const REVENUE = 3, EXPENSE = 4;
     let revenue = 0, expense = 0;
     accounts.forEach(a => {
+      const ar = accForPeriod(a.id, period.id);
       const sb = startingBalances[a.id] || {};
       const d = (sb.debit || 0) + (byAccount[a.id] ? byAccount[a.id].debit : 0);
       const c = (sb.credit || 0) + (byAccount[a.id] ? byAccount[a.id].credit : 0);
       const saldo = c - d; // revenue-normal positive, expense-normal negative
-      if (a.type === REVENUE) revenue += saldo;
-      if (a.type === EXPENSE) expense += -saldo; // show expenses as positive
+      if (ar.type === REVENUE) revenue += saldo;
+      if (ar.type === EXPENSE) expense += -saldo; // show expenses as positive
     });
     let html = '<h2>Tuloslaskelma</h2><p>' + (settings.name || '') + ' ' + (settings.businessId || '') + '</p>';
     html += '<p>Tilikausi: ' + period.startDate + ' – ' + period.endDate + '</p>';
@@ -998,7 +1110,7 @@
 
       docs.forEach(doc => {
         getEntriesByDocument(doc.id).forEach(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = accForPeriod(e.accountId, col.periodId);
           if (!acc) return;
           const type = acc.type;
           const debitAmt = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
@@ -1088,7 +1200,8 @@
       const sb = getStartingBalances(col.periodId);
       const balances = {};
       const seen = {};
-      accounts.forEach(acc => {
+      accounts.forEach(raw => {
+        const acc = accForPeriod(raw.id, col.periodId);
         const openD = (sb[acc.id] && sb[acc.id].debit) || 0;
         const openC = (sb[acc.id] && sb[acc.id].credit) || 0;
         const openBal = (acc.type === TYPE_ASSET || acc.type === TYPE_EXPENSE) ? (openD - openC) : (openC - openD);
@@ -1100,7 +1213,7 @@
       });
       docs.forEach(doc => {
         getEntriesByDocument(doc.id).forEach(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = accForPeriod(e.accountId, col.periodId);
           if (!acc) return;
           const type = acc.type;
           const debitAmt = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
@@ -1143,6 +1256,7 @@
     html += '<tr><td>Vastaavaa yhteensä</td><td class="text-right">' + (totalAsset != null ? formatFsAmount(totalAsset) : '') + '</td></tr>';
     html += '<tr><td>Vastattavaa yhteensä</td><td class="text-right">' + (totalLiabEquity != null ? formatFsAmount(totalLiabEquity) : '') + '</td></tr>';
     html += '</table>';
+    html += balanceSheetReconciliationHtml(totalAsset, totalLiabEquity);
     showReportInPanel('Tase', html);
   }
 
@@ -1204,7 +1318,8 @@
       const sb = getStartingBalances(col.periodId);
       const balances = {};
       const seen = {};
-      accounts.forEach(acc => {
+      accounts.forEach(raw => {
+        const acc = accForPeriod(raw.id, col.periodId);
         const openD = (sb[acc.id] && sb[acc.id].debit) || 0;
         const openC = (sb[acc.id] && sb[acc.id].credit) || 0;
         const openBal = (acc.type === TYPE_ASSET || acc.type === TYPE_EXPENSE) ? (openD - openC) : (openC - openD);
@@ -1216,7 +1331,7 @@
       });
       docs.forEach(doc => {
         getEntriesByDocument(doc.id).forEach(e => {
-          const acc = getAccountById(e.accountId);
+          const acc = accForPeriod(e.accountId, col.periodId);
           if (!acc) return;
           const type = acc.type;
           const debitAmt = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
@@ -1245,6 +1360,15 @@
     // Java FinancialStatementModel.calculateBalance() negates EXPENSE accounts for range sums.
     // Balance sheet uses profit row 3000–9999, so we must negate expenses here too.
     const fsRows = parseStructureFromTemplate(getBalanceSheetStructure(), { balancesByCol, cols, accounts, negateExpense: true });
+
+    let totalAssetDetailed = null;
+    let totalLiabEquityDetailed = null;
+    fsRows.forEach(function (r) {
+      if (!r.amounts || r.amounts[0] == null) return;
+      const text = (r.text || '').trim();
+      if (text === 'Vastaavaa yhteensä') totalAssetDetailed = r.amounts[0];
+      if (text === 'Vastattavaa yhteensä') totalLiabEquityDetailed = r.amounts[0];
+    });
 
     function ymdToFinnish(ymd) {
       if (!ymd || typeof ymd !== 'string' || ymd.length < 10) return '';
@@ -1292,7 +1416,9 @@
       }
       html += '</tr>';
     });
-    html += '</tbody></table></div>';
+    html += '</tbody></table>';
+    html += balanceSheetReconciliationHtml(totalAssetDetailed, totalLiabEquityDetailed);
+    html += '</div>';
     showReportInPanel('Tase tilierittelyin', html);
   };
 
@@ -1364,7 +1490,7 @@
   };
 
   /** Java VATReportModel: build account rows from raw entries using rowNumber matching. */
-  function buildVatReportDataJavaStyle(documents, accounts) {
+  function buildVatReportDataJavaStyle(documents, accounts, periodId) {
     const balances = typeof AccountBalances !== 'undefined' ? new AccountBalances(accounts) : null;
     const vatAmounts = {};
     let entryMap = {};
@@ -1386,7 +1512,7 @@
 
     allEntries.forEach(e => {
       if ((e.flags || 0) & 1) return;
-      const acc = getAccountById(e.accountId);
+      const acc = accForPeriod(e.accountId, periodId);
       if (!acc) return;
 
       if (e.documentId !== documentId) {
@@ -1461,7 +1587,7 @@
   }
 
   /** Fallback for legacy merged data (no rowNumber 100000+): sum by account. */
-  function buildVatReportDataLegacy(documents) {
+  function buildVatReportDataLegacy(documents, periodId) {
     const VAT_SECTION_CODES = [4, 5, 8, 9, 10, 11];
     const SALES_CODES = [1, 4, 6, 8, 10];
     const PURCHASE_CODES = [2, 5, 7, 9, 11];
@@ -1476,7 +1602,7 @@
     const byAccount = {};
     documents.forEach(doc => {
       (typeof getEntriesForDisplay === 'function' ? getEntriesForDisplay(doc.id) : getEntriesByDocument(doc.id)).forEach(e => {
-        const acc = getAccountById(e.accountId);
+        const acc = accForPeriod(e.accountId, periodId);
         if (!acc) return;
         const code = acc.vatCode != null ? Number(acc.vatCode) : 0;
         const isSales = SALES_CODES.indexOf(code) >= 0;
@@ -1520,14 +1646,14 @@
     });
     const VAT_CODE_NAMES = (typeof Tilikarttamallit !== 'undefined' && Tilikarttamallit.VAT_CODE_NAMES) ? Tilikarttamallit.VAT_CODE_NAMES : ['---', '', '', '', 'Verollinen myynti', 'Verolliset ostot', 'Veroton myynti', 'Veroton osto', 'Yhteisömyynti', 'Yhteisöostot', 'Rakentamispalvelun myynti', 'Rakentamispalvelun osto'];
     const VAT_SECTION_CODES = [4, 5, 8, 9, 10, 11];
-    const accounts = getAccounts();
+    const accounts = getAccounts().map(a => accForPeriod(a.id, period.id));
 
     const hasJavaStyleRows = documents.some(doc =>
       getEntriesByDocument(doc.id).some(e => (e.rowNumber || 0) >= 100000)
     );
     const accountRows = hasJavaStyleRows && typeof AccountBalances !== 'undefined'
-      ? buildVatReportDataJavaStyle(documents, accounts)
-      : buildVatReportDataLegacy(documents);
+      ? buildVatReportDataJavaStyle(documents, accounts, period.id)
+      : buildVatReportDataLegacy(documents, period.id);
 
     function formatReportNum(x) {
       const n = parseFloat(x);

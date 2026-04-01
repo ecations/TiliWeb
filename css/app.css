@@ -204,6 +204,91 @@ body {
 
 .btn-danger:hover svg { opacity: 1; }
 
+/* Tilikauden lukitus: harmaat ”pseudo-disabled”-painikkeet ja ilmoitus */
+.app-locked-hint {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 12px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text);
+  z-index: 10050;
+  pointer-events: none;
+}
+.app-locked-hint.hidden { display: none !important; }
+
+.btn.btn-locked-blocked {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: auto;
+}
+.btn.btn-locked-blocked:hover,
+.btn.btn-locked-blocked:hover svg {
+  opacity: 0.5;
+}
+
+.menu-dropdown button.menu-item-locked-blocked {
+  color: var(--text-muted);
+  cursor: not-allowed !important;
+  opacity: 0.45;
+}
+.menu-dropdown button.menu-item-locked-blocked:hover {
+  background: transparent;
+}
+
+.panel-body .data-table tbody tr.period-row-locked td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Tilikartta: tallentamattomat muutokset suljettaessa */
+.coa-close-confirm-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: inherit;
+}
+.coa-close-confirm-box {
+  max-width: 420px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.coa-close-confirm-title {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.coa-close-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.period-is-active {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--accent);
+  vertical-align: middle;
+}
+
 .btn-at-edge {
   color: var(--accent) !important;
   background: var(--bg-input) !important;
@@ -759,6 +844,61 @@ body {
   font-size: 0.9375rem;
 }
 
+/* Tiliote: tili + suodatin + suosikit */
+.panel-tiliote-picker .tiliote-filter-row {
+  margin: 10px 0 6px;
+}
+.panel-tiliote-picker .tiliote-filter-row label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.panel-tiliote-picker .tiliote-filter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+}
+.panel-tiliote-picker .tiliote-fav-row {
+  margin: 8px 0 10px;
+  font-size: 0.9375rem;
+}
+.panel-tiliote-picker .tiliote-sort-row {
+  margin: 10px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9375rem;
+}
+.panel-tiliote-picker .tiliote-sort-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 2px;
+}
+.panel-tiliote-picker .tiliote-sort-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.panel-tiliote-picker .tiliote-account-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
+
 /* Tables in panels */
 .data-table {
   width: 100%;
@@ -1071,6 +1211,23 @@ mark.search-hl {
 .report-view th { background: #f5f5f5; }
 .report-view .text-right { text-align: right; }
 .report-view .total { font-weight: bold; }
+
+.report-view .report-bs-recon {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  font-size: 0.9375rem;
+  color: #333;
+}
+.report-view .report-bs-recon-ok {
+  color: #1a7f37;
+  font-weight: 600;
+}
+.report-view .report-bs-recon-err {
+  color: #c0392b;
+  font-weight: 600;
+}
+
 /* Amount colors in light-background report view */
 .report-view .rd-debit  { text-align: right; color: #2a8a5e; }
 .report-view .rd-credit { text-align: right; color: #b05a1a; }
@@ -1094,6 +1251,21 @@ mark.search-hl {
 .text-right { text-align: right; }
 
 /* COA panel */
+.coa-filter-row { margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.coa-filter-row label { color: var(--text-muted); font-size: 0.9rem; white-space: nowrap; }
+.coa-filter-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 420px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.coa-filter-input:focus { outline: none; border-color: var(--accent); }
+.coa-table tr.coa-filter-hidden { display: none; }
 .coa-toolbar { margin-bottom: 12px; }
 .coa-toolbar .btn { margin-right: 8px; }
 .coa-filter-fav { margin-left: 12px; font-weight: normal; cursor: pointer; }

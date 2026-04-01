@@ -5,7 +5,9 @@
 (function () {
   'use strict';
 
-  function openPanel(title, bodyHtml, footerButtons) {
+  function openPanel(title, bodyHtml, footerButtons, options) {
+    options = options || {};
+    clearTilitinCoaCloseHook();
     const container = document.getElementById('panelContainer');
     container.innerHTML = '';
     const overlay = document.createElement('div');
@@ -16,7 +18,11 @@
       '<div class="panel-footer"></div></div>';
     const footer = overlay.querySelector('.panel-footer');
     if (footerButtons) footerButtons.forEach(b => footer.appendChild(b));
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.addEventListener('click', function (e) {
+      if (e.target !== overlay) return;
+      if (typeof options.onBackdropClick === 'function') options.onBackdropClick(e);
+      else overlay.remove();
+    });
     overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
     container.appendChild(overlay);
     return overlay;
@@ -29,6 +35,106 @@
 
   function refreshApp() {
     if (window.TilitinApp && window.TilitinApp.render) window.TilitinApp.render();
+  }
+
+  function clearTilitinCoaCloseHook() {
+    try {
+      delete window._tilitinCoaRequestClose;
+    } catch (_) {
+      window._tilitinCoaRequestClose = undefined;
+    }
+  }
+
+  function coaNumEq(a, b) {
+    return Math.abs((parseFloat(a) || 0) - (parseFloat(b) || 0)) < 1e-6;
+  }
+
+  function coaAccountRowIsDirty(tr) {
+    const id = parseInt(tr.dataset.id, 10);
+    if (!id) return false;
+    const acc = getAccountById(id);
+    if (!acc) return true;
+    const numInp = tr.querySelector('.coa-number');
+    const nameInp = tr.querySelector('.coa-name');
+    const num = numInp ? String(numInp.value || '').trim() : '';
+    const name = nameInp ? String(nameInp.value || '').trim() : '';
+    const typePick = tr.querySelector('.coa-picker[data-picker="type"]');
+    const vatCodePick = tr.querySelector('.coa-picker[data-picker="vat-code"]');
+    const vatAccountPick = tr.querySelector('.coa-picker[data-picker="vat-account"]');
+    const type = typePick ? parseInt(typePick.getAttribute('data-value'), 10) : 0;
+    const vatCode = vatCodePick ? parseInt(vatCodePick.getAttribute('data-value'), 10) : 0;
+    const vatAcc = vatAccountPick ? parseInt(vatAccountPick.getAttribute('data-value'), 10) : 0;
+    const rateInput = tr.querySelector('.coa-vat-rate');
+    const rate = rateInput ? (parseFloat(rateInput.value) || 0) : 0;
+    const fav = tr.querySelector('.coa-favourite') ? tr.querySelector('.coa-favourite').checked : false;
+    const favWas = !!((acc.flags || 0) & 1);
+    if (num !== String(acc.number || '').trim()) return true;
+    if (name !== String(acc.name || '').trim()) return true;
+    if (type !== (acc.type != null ? acc.type : 0)) return true;
+    if (vatCode !== (acc.vatCode != null ? acc.vatCode : 0)) return true;
+    if (!coaNumEq(rate, acc.vatRate != null ? acc.vatRate : 0)) return true;
+    if (vatAcc !== (acc.vatAccount1Id || 0)) return true;
+    if (fav !== favWas) return true;
+    return false;
+  }
+
+  function coaHeadingRowIsDirty(tr) {
+    const id = parseInt(tr.dataset.headingId, 10);
+    if (!id) return false;
+    const list = typeof getCOAHeadings === 'function' ? getCOAHeadings() : [];
+    const h = list.find(function (x) { return x.id === id; });
+    if (!h) return true;
+    const numInp = tr.querySelector('.coa-h-num');
+    const textInp = tr.querySelector('.coa-h-text');
+    const num = numInp ? String(numInp.value || '').trim() : '';
+    const text = textInp ? String(textInp.value || '').trim() : '';
+    const levelPick = tr.querySelector('.coa-picker[data-picker="h-level"]');
+    const level = levelPick ? parseInt(levelPick.getAttribute('data-value'), 10) : 0;
+    if (num !== String(h.number || '').trim()) return true;
+    if (text !== String(h.text || '').trim()) return true;
+    if (level !== (h.level != null ? h.level : 0)) return true;
+    return false;
+  }
+
+  function coaPanelHasUnsavedChanges(overlay) {
+    let dirty = false;
+    overlay.querySelectorAll('.coa-account-row').forEach(function (tr) {
+      if (coaAccountRowIsDirty(tr)) dirty = true;
+    });
+    overlay.querySelectorAll('.coa-heading-row').forEach(function (tr) {
+      if (coaHeadingRowIsDirty(tr)) dirty = true;
+    });
+    return dirty;
+  }
+
+  /** callback(act) — act: 'cancel' | 'save' | 'discard' */
+  function showCoaUnsavedCloseDialog(overlay, callback) {
+    if (overlay.querySelector('.coa-close-confirm-veil')) return;
+    const veil = document.createElement('div');
+    veil.className = 'coa-close-confirm-veil';
+    veil.setAttribute('role', 'dialog');
+    veil.setAttribute('aria-modal', 'true');
+    veil.innerHTML =
+      '<div class="coa-close-confirm-box">' +
+      '<p class="coa-close-confirm-title">Tilikartassa on tallentamattomia muutoksia.</p>' +
+      '<div class="coa-close-confirm-actions">' +
+      '<button type="button" class="btn" data-act="cancel">Peruuta sulkeminen</button>' +
+      '<button type="button" class="btn btn-primary" data-act="save">Tallenna kaikki</button>' +
+      '<button type="button" class="btn" data-act="discard">Sulje tallentamatta</button>' +
+      '</div></div>';
+    overlay.appendChild(veil);
+    function finish(act) {
+      veil.remove();
+      callback(act);
+    }
+    veil.addEventListener('click', function (e) {
+      if (e.target === veil) finish('cancel');
+    });
+    veil.querySelectorAll('[data-act]').forEach(function (btn) {
+      btn.onclick = function () {
+        finish(btn.getAttribute('data-act'));
+      };
+    });
   }
 
   /** Finnish prompt for AI: bulk CSV format for “Luo useita tositteita kerralla”. */
@@ -501,6 +607,7 @@
   };
 
   window.openCOAPanel = function () {
+    const filterTextStored = typeof window._coaFilterText === 'string' ? window._coaFilterText : '';
     const showFavouritesOnly = typeof window._coaShowFavouritesOnly === 'boolean' ? window._coaShowFavouritesOnly : false;
     let accounts = getAccounts();
     if (showFavouritesOnly) accounts = accounts.filter(a => (a.flags || 0) & 1);
@@ -527,7 +634,11 @@
       return acc ? (acc.number || '') + ' ' + (acc.name || '') : '—';
     }
 
-    let html = '<p class="coa-toolbar">';
+    let html = '<p class="coa-filter-row">';
+    html += '<label for="coaFilterInput">Suodata</label>';
+    html += '<input type="search" id="coaFilterInput" class="coa-filter-input" placeholder="Tilinumero tai nimi…" autocomplete="off">';
+    html += '</p>';
+    html += '<p class="coa-toolbar">';
     html += '<button type="button" class="btn btn-primary" id="btnAddAccount">Lisää tili</button> ';
     html += '<button type="button" class="btn btn-primary" id="btnAddHeading">Lisää otsikko</button> ';
     html += '<label class="coa-filter-fav"><input type="checkbox" id="coaShowFavouritesOnly" ' + (showFavouritesOnly ? 'checked' : '') + '> Näytä vain suosikkitilit</label>';
@@ -568,9 +679,63 @@
     const closeBtn = document.createElement('button');
     closeBtn.className = 'btn';
     closeBtn.textContent = 'Sulje';
-    closeBtn.onclick = closePanel;
-    const overlay = openPanel('Tilikartta', html, [closeBtn]);
+    const overlay = openPanel('Tilikartta', html, [closeBtn], {
+      onBackdropClick: function () {
+        if (window._tilitinCoaRequestClose) window._tilitinCoaRequestClose();
+      }
+    });
     overlay.querySelector('.panel').classList.add('panel-coa');
+
+    const coaFilterInput = overlay.querySelector('#coaFilterInput');
+    if (coaFilterInput) coaFilterInput.value = filterTextStored;
+
+    function applyCoaTableFilter() {
+      const q = (coaFilterInput && coaFilterInput.value ? coaFilterInput.value : '').trim().toLowerCase();
+      window._coaFilterText = coaFilterInput ? coaFilterInput.value : '';
+      const tbody = overlay.querySelector('.coa-table tbody');
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach(function (tr) {
+        if (tr.classList.contains('coa-account-row')) {
+          const numInp = tr.querySelector('.coa-number');
+          const nameInp = tr.querySelector('.coa-name');
+          const num = numInp ? String(numInp.value || '').toLowerCase() : '';
+          const name = nameInp ? String(nameInp.value || '').toLowerCase() : '';
+          const match = !q || num.indexOf(q) !== -1 || name.indexOf(q) !== -1;
+          tr.classList.toggle('coa-filter-hidden', !match);
+        }
+      });
+      rows.forEach(function (tr) {
+        if (!tr.classList.contains('coa-heading-row')) return;
+        if (!q) {
+          tr.classList.remove('coa-filter-hidden');
+          return;
+        }
+        const hNumInp = tr.querySelector('.coa-h-num');
+        const hTextInp = tr.querySelector('.coa-h-text');
+        const hNum = hNumInp ? String(hNumInp.value || '').toLowerCase() : '';
+        const hText = hTextInp ? String(hTextInp.value || '').toLowerCase() : '';
+        if (hNum.indexOf(q) !== -1 || hText.indexOf(q) !== -1) {
+          tr.classList.remove('coa-filter-hidden');
+          return;
+        }
+        let el = tr.nextElementSibling;
+        let anyAccountVisible = false;
+        while (el && !el.classList.contains('coa-heading-row')) {
+          if (el.classList.contains('coa-account-row') && !el.classList.contains('coa-filter-hidden')) {
+            anyAccountVisible = true;
+            break;
+          }
+          el = el.nextElementSibling;
+        }
+        tr.classList.toggle('coa-filter-hidden', !anyAccountVisible);
+      });
+    }
+
+    if (coaFilterInput) {
+      coaFilterInput.addEventListener('input', applyCoaTableFilter);
+      applyCoaTableFilter();
+    }
 
     function openCoaPicker(pickerEl, kind, options, currentValue) {
       const showFilter = kind === 'vat-account' && options.length > 15;
@@ -708,6 +873,66 @@
       saveCOAHeading({ number: '', text: '', level: 0 });
       window.openCOAPanel();
     };
+
+    function saveAllCoaFromOverlay() {
+      overlay.querySelectorAll('.coa-account-row').forEach(function (tr) {
+        if (!coaAccountRowIsDirty(tr)) return;
+        const id = parseInt(tr.dataset.id, 10);
+        if (!id) return;
+        const acc = getAccountById(id) || {};
+        acc.id = id;
+        acc.number = tr.querySelector('.coa-number').value.trim();
+        acc.name = tr.querySelector('.coa-name').value.trim();
+        const typePick = tr.querySelector('.coa-picker[data-picker="type"]');
+        const vatCodePick = tr.querySelector('.coa-picker[data-picker="vat-code"]');
+        const vatAccountPick = tr.querySelector('.coa-picker[data-picker="vat-account"]');
+        acc.type = typePick ? parseInt(typePick.getAttribute('data-value'), 10) : 0;
+        acc.vatCode = vatCodePick ? parseInt(vatCodePick.getAttribute('data-value'), 10) : 0;
+        const rateInput = tr.querySelector('.coa-vat-rate');
+        acc.vatRate = rateInput ? (parseFloat(rateInput.value) || 0) : 0;
+        acc.vatAccount1Id = vatAccountPick ? (parseInt(vatAccountPick.getAttribute('data-value'), 10) || 0) : 0;
+        acc.vatAccount2Id = acc.vatAccount2Id || 0;
+        let flags = acc.flags || 0;
+        if (tr.querySelector('.coa-favourite').checked) flags |= 1; else flags &= ~1;
+        acc.flags = flags;
+        saveAccount(acc);
+      });
+      overlay.querySelectorAll('.coa-heading-row').forEach(function (tr) {
+        if (!coaHeadingRowIsDirty(tr)) return;
+        const id = parseInt(tr.dataset.headingId, 10);
+        if (!id) return;
+        const h = getCOAHeadings().find(function (x) { return x.id === id; }) || {};
+        h.id = id;
+        h.number = tr.querySelector('.coa-h-num').value.trim();
+        h.text = tr.querySelector('.coa-h-text').value.trim();
+        const levelPick = tr.querySelector('.coa-picker[data-picker="h-level"]');
+        h.level = levelPick ? (parseInt(levelPick.getAttribute('data-value'), 10) || 0) : 0;
+        saveCOAHeading(h);
+      });
+    }
+
+    function requestCloseCoaPanel() {
+      if (!coaPanelHasUnsavedChanges(overlay)) {
+        overlay.remove();
+        clearTilitinCoaCloseHook();
+        return;
+      }
+      showCoaUnsavedCloseDialog(overlay, function (act) {
+        if (act === 'cancel') return;
+        if (act === 'save') {
+          saveAllCoaFromOverlay();
+          overlay.remove();
+          clearTilitinCoaCloseHook();
+          refreshApp();
+        } else if (act === 'discard') {
+          overlay.remove();
+          clearTilitinCoaCloseHook();
+        }
+      });
+    }
+
+    closeBtn.onclick = requestCloseCoaPanel;
+    window._tilitinCoaRequestClose = requestCloseCoaPanel;
   };
 
   window.openTilikarttamalliPanel = function () {
@@ -773,12 +998,28 @@
       return y + '-' + m + '-' + day;
     }
     const periods = getPeriods();
-    let html = '<table class="data-table"><thead><tr><th>Alku</th><th>Loppu</th><th>Lukittu</th><th></th></tr></thead><tbody>';
+    const activePeriodId = getSettings().currentPeriodId;
+    const lockTitle = 'Lukitsee tilikauden: kirjauksia ei voi enää muuttaa eikä uusia lisätä. Tilinimet, ALV-koodit ja -prosentit tallennetaan näkyviksi juuri tältä kaudelta — myös silloin, jos muutat tilikarttaa myöhemmin. Lukittu tilikartta näkyy tämän kauden tositteissa ja raporteissa.';
+    const unlockTitle = 'Poistaa lukituksen. Sen jälkeen tälle kaudelle voi tehdä kirjauksia uudelleen, ja näkymät käyttävät tilikartan nykyisiä tilinimiä ja ALV-tietoja.';
+    let html = '<table class="data-table"><thead><tr><th>Alku</th><th>Loppu</th><th>Lukitus</th><th></th></tr></thead><tbody>';
     periods.forEach(p => {
-      html += '<tr data-id="' + p.id + '"><td><input type="date" value="' + (toYyyyMmDd(p.startDate) || '') + '" class="period-start"></td>';
-      html += '<td><input type="date" value="' + (toYyyyMmDd(p.endDate) || '') + '" class="period-end"></td>';
-      html += '<td><input type="checkbox" ' + (p.locked ? 'checked' : '') + ' class="period-locked"></td>';
-      html += '<td><button type="button" class="btn btn-save-period">Tallenna</button> <button type="button" class="btn btn-set-current">Käytä</button> <button type="button" class="btn btn-danger btn-delete-period">Poista</button></td></tr>';
+      const locked = !!p.locked;
+      html += '<tr class="' + (locked ? 'period-row-locked' : '') + '" data-id="' + p.id + '" data-locked="' + (locked ? '1' : '0') + '"><td><input type="date" value="' + (toYyyyMmDd(p.startDate) || '') + '" class="period-start"' + (locked ? ' disabled' : '') + '></td>';
+      html += '<td><input type="date" value="' + (toYyyyMmDd(p.endDate) || '') + '" class="period-end"' + (locked ? ' disabled' : '') + '></td>';
+      html += '<td>';
+      if (locked) {
+        html += '<button type="button" class="btn btn-period-unlock" title="' + unlockTitle.replace(/"/g, '&quot;') + '">Avaa lukitus</button>';
+      } else {
+        html += '<button type="button" class="btn btn-primary btn-period-lock" title="' + lockTitle.replace(/"/g, '&quot;') + '">Lukitse</button>';
+      }
+      html += '</td>';
+      html += '<td><button type="button" class="btn btn-save-period"' + (locked ? ' disabled' : '') + '>Tallenna</button> ';
+      if (activePeriodId != null && p.id === activePeriodId) {
+        html += '<span class="period-is-active" aria-current="true">aktiivinen</span> ';
+      } else {
+        html += '<button type="button" class="btn btn-set-current">Käytä</button> ';
+      }
+      html += '<button type="button" class="btn btn-danger btn-delete-period"' + (locked ? ' disabled' : '') + '>Poista</button></td></tr>';
     });
     html += '</tbody></table>';
     html += '<p><button type="button" class="btn btn-primary" id="btnAddPeriod">Lisää tilikausi</button></p>';
@@ -787,21 +1028,55 @@
     closeBtn.textContent = 'Sulje';
     closeBtn.onclick = closePanel;
     const overlay = openPanel('Tilikaudet', html, [closeBtn]);
+    overlay.querySelectorAll('.btn-period-lock').forEach(function (btn) {
+      btn.onclick = function () {
+        const tr = this.closest('tr');
+        const id = parseInt(tr.dataset.id, 10);
+        const p = getPeriodById(id);
+        if (!p || p.locked) return;
+        savePeriodCoaSnapshot(id, buildPeriodCoaSnapshotFromAccounts());
+        p.locked = true;
+        savePeriod(p);
+        refreshApp();
+        window.openPeriodsPanel();
+      };
+    });
+    overlay.querySelectorAll('.btn-period-unlock').forEach(function (btn) {
+      btn.onclick = function () {
+        const tr = this.closest('tr');
+        const id = parseInt(tr.dataset.id, 10);
+        const p = getPeriodById(id);
+        if (!p || !p.locked) return;
+        const msg = 'Haluatko varmasti poistaa tilikauden lukituksen?\n\n' +
+          'Sen jälkeen voit muuttaa tämän kauden kirjauksia ja alkusaldoja. ' +
+          'Tositteet ja raportit alkavat käyttää nykyisen tilikartan tilinimiä ja ALV-koodeja — ' +
+          'jos olet muuttanut tilikarttaa lukituksen jälkeen, vanhat rivit näkyvät uusien nimien ja ALV-tietojen kanssa.\n\n' +
+          'Tilikartan lukitushetkellä tallennettu näkymä poistetaan.';
+        if (!confirm(msg)) return;
+        deletePeriodCoaSnapshot(id);
+        p.locked = false;
+        savePeriod(p);
+        refreshApp();
+        window.openPeriodsPanel();
+      };
+    });
     overlay.querySelectorAll('.btn-save-period').forEach(btn => {
       btn.onclick = function () {
+        if (this.disabled) return;
         const tr = this.closest('tr');
         const id = parseInt(tr.dataset.id, 10);
         const p = getPeriodById(id) || {};
         p.id = id;
         p.startDate = tr.querySelector('.period-start').value;
         p.endDate = tr.querySelector('.period-end').value;
-        p.locked = tr.querySelector('.period-locked').checked;
+        p.locked = !!p.locked;
         savePeriod(p);
         refreshApp();
       };
     });
     overlay.querySelectorAll('.btn-delete-period').forEach(btn => {
       btn.onclick = function () {
+        if (this.disabled) return;
         if (!confirm('Poistetaan tilikausi?')) return;
         const tr = this.closest('tr');
         deletePeriod(parseInt(tr.dataset.id, 10));
@@ -1085,6 +1360,10 @@
   window.openStartingBalancesPanel = function () {
     const period = getPeriod();
     if (!period) { alert('Valitse ensin tilikausi.'); return; }
+    if (period.locked) {
+      alert('Tämä tilikausi on lukittu. Alkusaldoja ei voi muuttaa ennen kuin lukitus poistetaan (Muokkaa → Tilikaudet).');
+      return;
+    }
     const balances = getStartingBalances(period.id);
     const prevResult = computeOpeningBalancesFromPreviousPeriodClosing(period);
     const suggestedByAccountId = {};
