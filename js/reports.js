@@ -71,7 +71,30 @@
     return true;
   }
 
-  function showReportInPanel(title, html) {
+  function csvEscapeField(val) {
+    const s = String(val == null ? '' : val);
+    if (/[;"\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function triggerCsvDownload(content, filename) {
+    const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'raportti.csv';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function showReportInPanel(title, html, opts) {
+    opts = opts || {};
+    const csvBtn = opts.csvContent
+      ? '<button type="button" class="btn" id="btnSaveReportCsv">Tallenna CSV</button>'
+      : '';
     const container = document.getElementById('panelContainer');
     container.innerHTML = '';
     const overlay = document.createElement('div');
@@ -81,6 +104,7 @@
       '<div class="panel-body report-view">' + html + '</div>' +
       '<div class="panel-footer" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
         '<button type="button" class="btn btn-primary" id="btnPrintReport">Tulosta</button>' +
+        csvBtn +
         '<button type="button" class="btn" id="btnOpenPopupReport">Avaa ponnahdusikkunassa</button>' +
         '<button type="button" class="btn" id="btnCloseReport">Sulje</button>' +
       '</div></div>';
@@ -89,6 +113,11 @@
     overlay.querySelector('#btnCloseReport').onclick = () => overlay.remove();
     overlay.querySelector('#btnPrintReport').onclick = () => window.print();
     overlay.querySelector('#btnOpenPopupReport').onclick = () => openReportPopup(title, html);
+    if (opts.csvContent) {
+      overlay.querySelector('#btnSaveReportCsv').onclick = function () {
+        triggerCsvDownload(opts.csvContent, opts.csvFilename);
+      };
+    }
     container.appendChild(overlay);
   }
 
@@ -177,9 +206,13 @@
 
   const _IS_DEFAULT = [
 
-      'DP0;3000;3600;LIIKEVAIHTO',
+      'DP0;3000;3480;3481;3600;LIIKEVAIHTO',
       '-',
-      'SB0;3000;3600;LIIKEVAIHTO',
+      'SB0;3000;3480;3481;3600;LIIKEVAIHTO',
+      '-',
+      'GB0;3480;3480;Korkotuotot (rahoitustuotto, ei liikevaihtoa)',
+      'DP0;3480;3480;Korkotuotot (rahoitustuotto, ei liikevaihtoa)',
+      'TB0;3480;3480;Korkotuotot yhteensä',
       '-',
       'GB0;3600;3630;Valmiiden ja keskeneräisten tuotteiden varastojen muutos',
       'DP1;3600;3630;Valmiiden ja keskeneräisten tuotteiden varastojen muutos',
@@ -609,6 +642,28 @@
     return (saved && saved.lines) ? saved.lines : _BS_DEFAULT;
   }
 
+  function findPeriodContainingDate(ymd) {
+    if (!ymd) return null;
+    const list = (typeof getPeriods === 'function' ? getPeriods() : []).slice().sort(function (a, b) {
+      return String(a.startDate || '').localeCompare(String(b.startDate || ''));
+    });
+    return list.find(function (p) {
+      return ymd >= (p.startDate || '') && ymd <= (p.endDate || '');
+    }) || null;
+  }
+
+  function clipYmdToPeriod(ymd, p) {
+    if (!p || !ymd) return ymd;
+    if (ymd < (p.startDate || '')) return p.startDate;
+    if (ymd > (p.endDate || '')) return p.endDate;
+    return ymd;
+  }
+
+  function summarySbForAccount(balances, accountId) {
+    if (!balances) return {};
+    return balances[accountId] || balances[String(accountId)] || balances[Number(accountId)] || {};
+  }
+
   window.openReportAccountSummary = function () {
     const period = getPeriod();
     if (!period) { alert('Valitse tilikausi.'); return; }
@@ -617,9 +672,20 @@
     if (!container) return;
     const overlay = document.createElement('div');
     overlay.className = 'panel-overlay';
-    const html = '<div class="panel" style="max-width: 400px;">' +
+    const html = '<div class="panel" style="max-width: 440px;">' +
       '<div class="panel-title">Tilien saldot</div>' +
       '<div class="panel-body">' +
+      '<div class="form-group">' +
+      '<span style="display:block;margin-bottom:8px;color:var(--text-muted);font-size:0.9rem;">Näkymä</span>' +
+      '<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">' +
+      '<input type="radio" name="reportSummaryMode" value="period" checked> Tilikausi (debet, kredit, saldo)</label>' +
+      '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">' +
+      '<input type="radio" name="reportSummaryMode" value="asof"> Tietty päivä (vain saldo)</label>' +
+      '</div>' +
+      '<div class="form-group" id="reportSummaryAsOfWrap" style="display:none;">' +
+      '<label for="reportSummaryAsOfDate">Päivämäärä</label>' +
+      '<input type="date" id="reportSummaryAsOfDate" class="form-control">' +
+      '</div>' +
       '<div class="form-group">' +
       '<label><input type="checkbox" id="reportSummaryHideZero" name="reportSummaryHideZero"> Jätä pois nollasaldotilit</label>' +
       '</div>' +
@@ -632,23 +698,75 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
 
+    const t = new Date();
+    const todayYmd = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    const asOfInput = overlay.querySelector('#reportSummaryAsOfDate');
+    if (asOfInput) asOfInput.value = clipYmdToPeriod(todayYmd, period);
+
+    function syncAsOfVisibility() {
+      const v = overlay.querySelector('input[name="reportSummaryMode"]:checked');
+      const show = v && v.value === 'asof';
+      const w = overlay.querySelector('#reportSummaryAsOfWrap');
+      if (w) w.style.display = show ? '' : 'none';
+    }
+    overlay.querySelectorAll('input[name="reportSummaryMode"]').forEach(function (r) {
+      r.addEventListener('change', syncAsOfVisibility);
+    });
+
     overlay.querySelector('#btnReportSummaryCancel').onclick = () => overlay.remove();
     overlay.querySelector('#btnReportSummaryShow').onclick = function () {
       const hideZero = !!overlay.querySelector('#reportSummaryHideZero').checked;
+      const modeEl = overlay.querySelector('input[name="reportSummaryMode"]:checked');
+      const mode = modeEl && modeEl.value === 'asof' ? 'asof' : 'period';
+      let asOfYmd = '';
+      if (mode === 'asof') {
+        asOfYmd = asOfInput && asOfInput.value ? String(asOfInput.value).trim() : '';
+        if (!asOfYmd) {
+          alert('Valitse päivämäärä.');
+          return;
+        }
+        if (!findPeriodContainingDate(asOfYmd)) {
+          alert('Päivä ei kuulu mihinkään tilikauteen.');
+          return;
+        }
+      }
       overlay.remove();
-      runReportAccountSummary(period, settings, hideZero);
+      runReportAccountSummary(settings, hideZero, { mode: mode, asOfDate: asOfYmd || null, anchorPeriod: period });
     };
     container.appendChild(overlay);
   };
 
-  function runReportAccountSummary(period, settings, hideZeroBalances) {
+  function runReportAccountSummary(settings, hideZeroBalances, opts) {
+    opts = opts || {};
+    const mode = opts.mode === 'asof' ? 'asof' : 'period';
+    let asOfDate = opts.asOfDate || null;
+    let period = null;
+    if (mode === 'asof') {
+      if (!asOfDate) return;
+      period = findPeriodContainingDate(asOfDate);
+      if (!period) {
+        alert('Päivä ei kuulu mihinkään tilikauteen.');
+        return;
+      }
+    } else {
+      period = opts.anchorPeriod || getPeriod();
+      if (!period) {
+        alert('Valitse tilikausi.');
+        return;
+      }
+    }
+
     const startingBalances = getStartingBalances(period.id);
     const accounts = getAccounts();
     const documents = getDocuments(period.id, null);
     const entriesByAccount = {};
-    accounts.forEach(a => { entriesByAccount[a.id] = { debit: 0, credit: 0 }; });
-    documents.forEach(doc => {
-      getEntriesByDocument(doc.id).forEach(e => {
+    accounts.forEach(function (a) { entriesByAccount[a.id] = { debit: 0, credit: 0 }; });
+    documents.forEach(function (doc) {
+      const d = doc.date || '';
+      if (mode === 'asof') {
+        if (!d || d > asOfDate) return;
+      }
+      getEntriesByDocument(doc.id).forEach(function (e) {
         if (!entriesByAccount[e.accountId]) entriesByAccount[e.accountId] = { debit: 0, credit: 0 };
         const deb = e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0);
         const cred = e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0);
@@ -656,26 +774,46 @@
         entriesByAccount[e.accountId].credit += cred;
       });
     });
+
     let html = '<h2>Tilien saldot</h2><p>' + (settings.name || '') + ' ' + (settings.businessId || '') + '</p>';
-    html += '<p>Tilikausi: ' + period.startDate + ' - ' + period.endDate + '</p>';
+    if (mode === 'asof') {
+      html += '<p>Saldot päivälle ' + formatDate(asOfDate) + ' (tilikausi ' + period.startDate + ' – ' + period.endDate + ').</p>';
+    } else {
+      html += '<p>Tilikausi: ' + period.startDate + ' - ' + period.endDate + '</p>';
+    }
     if (hideZeroBalances) html += '<p><em>Nollasaldotilit jätetty pois.</em></p>';
-    html += '<table><thead><tr><th>Tili</th><th>Nimi</th><th class="text-right">Debet</th><th class="text-right">Kredit</th><th class="text-right">Saldo</th></tr></thead><tbody>';
+
+    const showDc = mode === 'period';
+    if (showDc) {
+      html += '<table><thead><tr><th>Tili</th><th>Nimi</th><th class="text-right">Debet</th><th class="text-right">Kredit</th><th class="text-right">Saldo</th></tr></thead><tbody>';
+    } else {
+      html += '<table><thead><tr><th>Tili</th><th>Nimi</th><th class="text-right">Saldo</th></tr></thead><tbody>';
+    }
     let totalDebit = 0, totalCredit = 0;
-    accounts.forEach(a => {
+    accounts.forEach(function (a) {
       const disp = accForPeriod(a.id, period.id);
-      const sb = startingBalances[a.id] || {};
-      let deb = (sb.debit || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].debit : 0);
-      let cred = (sb.credit || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].credit : 0);
+      const sb = summarySbForAccount(startingBalances, a.id);
+      let deb = (parseFloat(sb.debit) || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].debit : 0);
+      let cred = (parseFloat(sb.credit) || 0) + (entriesByAccount[a.id] ? entriesByAccount[a.id].credit : 0);
       const saldo = deb - cred;
       const isZero = Math.abs(saldo) < 0.005;
       totalDebit += deb;
       totalCredit += cred;
       if (hideZeroBalances && isZero) return;
-      html += '<tr><td>' + (disp.number || '') + '</td><td>' + (disp.name || '') + '</td><td class="rd-debit">' + formatNum(deb) + '</td><td class="rd-credit">' + formatNum(cred) + '</td><td class="rd-num">' + formatNum(saldo) + '</td></tr>';
+      if (showDc) {
+        html += '<tr><td>' + (disp.number || '') + '</td><td>' + (disp.name || '') + '</td><td class="rd-debit">' + formatNum(deb) + '</td><td class="rd-credit">' + formatNum(cred) + '</td><td class="rd-num">' + formatNum(saldo) + '</td></tr>';
+      } else {
+        html += '<tr><td>' + (disp.number || '') + '</td><td>' + (disp.name || '') + '</td><td class="rd-num">' + formatNum(saldo) + '</td></tr>';
+      }
     });
-    html += '<tr class="total"><td colspan="2">Yhteensä</td><td class="rd-debit">' + formatNum(totalDebit) + '</td><td class="rd-credit">' + formatNum(totalCredit) + '</td><td class="rd-num">' + formatNum(totalDebit - totalCredit) + '</td></tr>';
+    if (showDc) {
+      html += '<tr class="total"><td colspan="2">Yhteensä</td><td class="rd-debit">' + formatNum(totalDebit) + '</td><td class="rd-credit">' + formatNum(totalCredit) + '</td><td class="rd-num">' + formatNum(totalDebit - totalCredit) + '</td></tr>';
+    } else {
+      html += '<tr class="total"><td colspan="2">Yhteensä (debet − kredit)</td><td class="rd-num">' + formatNum(totalDebit - totalCredit) + '</td></tr>';
+    }
     html += '</tbody></table>';
-    showReportInPanel('Tilien saldot', html);
+    const panelTitle = mode === 'asof' ? ('Tilien saldot – ' + formatDate(asOfDate)) : 'Tilien saldot';
+    showReportInPanel(panelTitle, html);
   }
 
   window.openReportDocument = function () {
@@ -799,7 +937,10 @@
       if (hasOpening) {
         const sbDeb = parseFloat(sb.debit) || 0;
         const sbCred = parseFloat(sb.credit) || 0;
-        html += '<tr class="total"><td colspan="3">Alkusaldo</td>' +
+        const sbDesc = (sb.description && String(sb.description).trim())
+          ? String(sb.description).replace(/</g, '&lt;') : '';
+        const alkSelite = 'Alkusaldo' + (sbDesc ? ' — ' + sbDesc : '');
+        html += '<tr class="total"><td></td><td></td><td>' + alkSelite + '</td>' +
           '<td class="rd-debit">' + (sbDeb ? formatNum(sbDeb) : '') + '</td>' +
           '<td class="rd-credit">' + (sbCred ? formatNum(sbCred) : '') + '</td>' +
           '<td class="text-right rd-balance">' + formatNum(runningBalance) + '</td>' +
@@ -843,7 +984,7 @@
       const favourite = !!((a.flags || 0) & 1);
       return { value: a.id, label: (d.number || '') + ' ' + (d.name || ''), favourite: favourite };
     });
-    const html = '<div class="panel panel-tiliote-picker" style="max-width: 420px;">' +
+    const html = '<div class="panel panel-tiliote-picker" style="max-width: 440px;">' +
       '<div class="panel-title">Tiliote</div>' +
       '<div class="panel-body">' +
       '<p>Valitse tili</p>' +
@@ -857,6 +998,14 @@
       '<label class="tiliote-sort-opt"><input type="radio" name="tilioteSort" value="date" checked> Aikajärjestys</label>' +
       '<label class="tiliote-sort-opt"><input type="radio" name="tilioteSort" value="docnumber"> Tositenumerojärjestys</label>' +
       '</div>' +
+      '<div class="tiliote-range-row">' +
+      '<label for="tilioteRangeMode">Ajanjakso</label>' +
+      '<select id="tilioteRangeMode" class="tiliote-range-select">' +
+      '<option value="current_period" selected>Tämä tilikausi</option>' +
+      '<option value="current_month">Tämä kuukausi</option>' +
+      '<option value="two_periods">Tämä ja viime tilikausi</option>' +
+      '<option value="all_periods">Kaikki tilikaudet</option>' +
+      '</select></div>' +
       '<select id="tilioteAccountId" class="tiliote-account-select" size="14">' +
       opts.map(o => '<option value="' + o.value + '" data-favourite="' + (o.favourite ? '1' : '0') + '">' +
         (o.label || '').replace(/</g, '&lt;') + '</option>').join('') +
@@ -904,48 +1053,122 @@
       if (!accountId) { alert('Valitse tili.'); return; }
       const sortEl = overlay.querySelector('input[name="tilioteSort"]:checked');
       const sortMode = sortEl && sortEl.value === 'docnumber' ? 'docnumber' : 'date';
+      const rangeEl = overlay.querySelector('#tilioteRangeMode');
+      const rangeMode = rangeEl && rangeEl.value ? rangeEl.value : 'current_period';
       overlay.remove();
-      runReportAccountStatement(period, accountId, sortMode);
+      runReportAccountStatement(period, accountId, sortMode, rangeMode);
     };
     container.appendChild(overlay);
     if (filterInput) filterInput.focus();
   };
 
-  function runReportAccountStatement(period, accountId, sortMode) {
-    const settings = getSettings();
-    const account = accForPeriod(accountId, period.id);
-    if (!account) { alert('Tiliä ei löydy.'); return; }
-    if (sortMode !== 'docnumber') sortMode = 'date';
+  function docNumKeyTiliote(doc) {
+    const n = parseInt(doc.number, 10);
+    return isNaN(n) ? 0 : n;
+  }
 
-    // Initialise running balance from opening balance (alkusaldo).
-    // AccountBalances uses signed balance: positive = debit-normal, negative = credit-normal.
+  /** Debet/kredit amounts for a ledger line (same convention as tiliote rows). */
+  function tilioteEntryDebitCredit(e) {
+    const deb  = parseFloat(e.amountDebit  != null ? e.amountDebit  : (e.debit  ? (e.amount || 0) : 0)) || 0;
+    const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
+    return { deb: Math.round(deb * 100) / 100, cred: Math.round(cred * 100) / 100 };
+  }
+
+  function tilioteYmdNorm(x) {
+    if (x == null || x === '') return '';
+    const s = String(x).trim();
+    return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : s;
+  }
+
+  /** localStorage JSON may use string keys; bracket access must try id variants. */
+  function tilioteSbForAccount(periodId, accountId) {
+    const raw = getStartingBalances(periodId) || {};
+    return raw[accountId] || raw[String(accountId)] || raw[Number(accountId)] || {};
+  }
+
+  /**
+   * Omit only when this line repeats the **stored** alkusaldo for the same tilikausi (same deb/cred).
+   * Do not match on selite alone — if alkusaldo is only in kirjaukset, poisto veisi summan kokonaan.
+   */
+  function shouldOmitTilioteOpeningDuplicateLine(doc, entry, accountId, period) {
+    if (!period || !doc) return false;
+    if (tilioteYmdNorm(doc.date) !== tilioteYmdNorm(period.startDate)) return false;
+    if (doc.periodId != null && period.id != null && Number(doc.periodId) !== Number(period.id)) return false;
+    const sb = tilioteSbForAccount(period.id, accountId);
+    const sbDeb = Math.round((parseFloat(sb.debit) || 0) * 100) / 100;
+    const sbCred = Math.round((parseFloat(sb.credit) || 0) * 100) / 100;
+    if (sbDeb === 0 && sbCred === 0) return false;
+    const tc = tilioteEntryDebitCredit(entry);
+    return tc.deb === sbDeb && tc.cred === sbCred;
+  }
+
+  function resolveTilioteDocPeriod(doc, periodsForDocs) {
+    if (!doc || !periodsForDocs || !periodsForDocs.length) return null;
+    let p = periodsForDocs.find(function (pp) { return Number(pp.id) === Number(doc.periodId); });
+    if (p) return p;
+    const d = tilioteYmdNorm(doc.date);
+    if (!d) return null;
+    return periodsForDocs.find(function (pp) {
+      return d >= tilioteYmdNorm(pp.startDate) && d <= tilioteYmdNorm(pp.endDate);
+    }) || null;
+  }
+
+  /**
+   * Monella tilikaudella: jos 1. päivän "Alkusaldo"-kirjaus toistaa jo juoksusaldoa (ei tallennettua SB:ta),
+   * poista rivi — muuten saldo tuplaantuu (esim. 219 → 438 €).
+   */
+  function filterTilioteDuplicateOpeningJournalLines(account, accountId, periodsForDocs, items, sortMode, sbDebit, sbCredit, beforeItems) {
+    if (!periodsForDocs || periodsForDocs.length < 2) return items;
     const ab = new AccountBalances([account]);
-    const startingBalances = getStartingBalances(period.id);
-    const sbEntry = startingBalances[accountId] || {};
-    const sbDebit  = parseFloat(sbEntry.debit)  || 0;
-    const sbCredit = parseFloat(sbEntry.credit) || 0;
-    // Inject opening balance as a synthetic entry so AccountBalances tracks it correctly.
-    if (sbDebit > 0)  ab.addEntry({ accountId: accountId, amountDebit: sbDebit,  amountCredit: 0 });
+    if (sbDebit > 0) ab.addEntry({ accountId: accountId, amountDebit: sbDebit, amountCredit: 0 });
     if (sbCredit > 0) ab.addEntry({ accountId: accountId, amountDebit: 0, amountCredit: sbCredit });
-    const openingBalance = ab.getBalance(accountId) || 0;
-
-    const documents = getDocuments(period.id, null);
-    const items = [];
-    documents.forEach(function (doc) {
-      getEntriesByDocument(doc.id).filter(function (e) { return e.accountId === accountId; }).forEach(function (e) {
-        items.push({ doc: doc, entry: e });
-      });
+    sortTilioteItems(beforeItems, sortMode);
+    beforeItems.forEach(function (item) { ab.addEntry(item.entry); });
+    sortTilioteItems(items, sortMode);
+    const out = [];
+    const alkRe = /^alkusaldo(\s*$|\s*[—–-]|\s*,)/i;
+    items.forEach(function (item) {
+      const doc = item.doc;
+      const e = item.entry;
+      const p = resolveTilioteDocPeriod(doc, periodsForDocs);
+      const balanceBefore = ab.getBalance(accountId) || 0;
+      const tc = tilioteEntryDebitCredit(e);
+      if (p && shouldOmitTilioteOpeningDuplicateLine(doc, e, accountId, p)) {
+        return;
+      }
+      if (p) {
+        const periodIdx = periodsForDocs.findIndex(function (pp) { return Number(pp.id) === Number(p.id); });
+        if (periodIdx >= 1 && tilioteYmdNorm(doc.date) === tilioteYmdNorm(p.startDate)) {
+          const desc = (e.description && String(e.description).trim()) || '';
+          if (alkRe.test(desc)) {
+            const isDn = typeof accountIsDebitNormalForLedger === 'function'
+              ? accountIsDebitNormalForLedger(account)
+              : (function () {
+                const t = Number(account.type);
+                return t === 0 || t === 4 || t === 5;
+              }());
+            let dupByBalance = false;
+            if (isDn) {
+              dupByBalance = tc.deb > 0 && tc.cred === 0 && Math.abs(balanceBefore - tc.deb) < 0.02;
+            } else {
+              dupByBalance = tc.cred > 0 && tc.deb === 0 && Math.abs(balanceBefore - tc.cred) < 0.02;
+            }
+            if (dupByBalance) return;
+          }
+        }
+      }
+      ab.addEntry(e);
+      out.push(item);
     });
+    return out;
+  }
 
-    function docNumKey(doc) {
-      const n = parseInt(doc.number, 10);
-      return isNaN(n) ? 0 : n;
-    }
+  function sortTilioteItems(items, sortMode) {
     items.sort(function (a, b) {
       const da = String(a.doc.date || '');
       const db = String(b.doc.date || '');
-      const na = docNumKey(a.doc);
-      const nb = docNumKey(b.doc);
+      const na = docNumKeyTiliote(a.doc);
+      const nb = docNumKeyTiliote(b.doc);
       const ra = a.entry.rowNumber != null ? a.entry.rowNumber : 0;
       const rb = b.entry.rowNumber != null ? b.entry.rowNumber : 0;
       if (sortMode === 'docnumber') {
@@ -957,6 +1180,134 @@
       if (na !== nb) return na - nb;
       return ra - rb;
     });
+  }
+
+  function collectTilioteEntriesBeforeDate(accountId, periodsList, rangeStart) {
+    const items = [];
+    periodsList.forEach(function (p) {
+      getDocuments(p.id, null).forEach(function (doc) {
+        const d = doc.date || '';
+        if (!d || d >= rangeStart) return;
+        getEntriesByDocument(doc.id).forEach(function (e) {
+          if (Number(e.accountId) !== Number(accountId)) return;
+          if (shouldOmitTilioteOpeningDuplicateLine(doc, e, accountId, p)) return;
+          items.push({ doc: doc, entry: e });
+        });
+      });
+    });
+    return items;
+  }
+
+  function collectTilioteEntriesForAccount(accountId, periodsList, rangeStart, rangeEnd, includeUndated) {
+    const items = [];
+    periodsList.forEach(function (p) {
+      getDocuments(p.id, null).forEach(function (doc) {
+        const d = doc.date || '';
+        if (d) {
+          if (d < rangeStart || d > rangeEnd) return;
+        } else if (!includeUndated) {
+          return;
+        }
+        getEntriesByDocument(doc.id).forEach(function (e) {
+          if (Number(e.accountId) !== Number(accountId)) return;
+          if (shouldOmitTilioteOpeningDuplicateLine(doc, e, accountId, p)) return;
+          items.push({ doc: doc, entry: e });
+        });
+      });
+    });
+    return items;
+  }
+
+  function runReportAccountStatement(period, accountId, sortMode, rangeMode) {
+    const settings = getSettings();
+    const account = accForPeriod(accountId, period.id);
+    if (!account) { alert('Tiliä ei löydy.'); return; }
+    if (sortMode !== 'docnumber') sortMode = 'date';
+    rangeMode = rangeMode || 'current_period';
+
+    const periodsSorted = (typeof getPeriods === 'function' ? getPeriods() : []).slice().sort(function (a, b) {
+      return String(a.startDate || '').localeCompare(String(b.startDate || ''));
+    });
+
+    let rangeStart;
+    let rangeEnd;
+    let periodsForDocs;
+    let sbPeriodId;
+    let rangeLabelHtml;
+    let includeUndated;
+
+    if (rangeMode === 'current_month') {
+      const t = new Date();
+      const y = t.getFullYear();
+      const mo = t.getMonth() + 1;
+      const monthStart = y + '-' + String(mo).padStart(2, '0') + '-01';
+      const lastD = new Date(y, t.getMonth() + 1, 0).getDate();
+      const monthEnd = y + '-' + String(mo).padStart(2, '0') + '-' + String(lastD).padStart(2, '0');
+      const ps = period.startDate || '';
+      const pe = period.endDate || '';
+      if (!ps || !pe || monthStart > pe || monthEnd < ps) {
+        alert('Nykyinen kuukausi ei osu valitun tilikauden päivämääriin.');
+        return;
+      }
+      rangeStart = monthStart > ps ? monthStart : ps;
+      rangeEnd = monthEnd < pe ? monthEnd : pe;
+      periodsForDocs = [period];
+      sbPeriodId = period.id;
+      includeUndated = false;
+      rangeLabelHtml = 'Ajanjakso: ' + formatDate(rangeStart) + ' – ' + formatDate(rangeEnd) + ' (tämä kuukausi)';
+    } else if (rangeMode === 'two_periods') {
+      const prev = typeof getPreviousPeriod === 'function' ? getPreviousPeriod(period) : null;
+      if (!prev) {
+        alert('Edellistä tilikautta ei ole.');
+        return;
+      }
+      rangeStart = prev.startDate;
+      rangeEnd = period.endDate;
+      periodsForDocs = [prev, period];
+      sbPeriodId = prev.id;
+      includeUndated = false;
+      rangeLabelHtml = 'Ajanjakso: ' + formatDate(rangeStart) + ' – ' + formatDate(rangeEnd) + ' (tämä ja viime tilikausi)';
+    } else if (rangeMode === 'all_periods') {
+      if (!periodsSorted.length) {
+        alert('Ei tilikausia.');
+        return;
+      }
+      rangeStart = periodsSorted[0].startDate;
+      rangeEnd = periodsSorted[periodsSorted.length - 1].endDate;
+      periodsForDocs = periodsSorted;
+      sbPeriodId = periodsSorted[0].id;
+      includeUndated = false;
+      rangeLabelHtml = 'Kaikki tilikaudet (' + periodsSorted.length + ' kpl): ' + rangeStart + ' – ' + rangeEnd;
+    } else {
+      rangeStart = period.startDate;
+      rangeEnd = period.endDate;
+      periodsForDocs = [period];
+      sbPeriodId = period.id;
+      includeUndated = true;
+      rangeLabelHtml = 'Tilikausi: ' + period.startDate + ' – ' + period.endDate;
+    }
+
+    const ab = new AccountBalances([account]);
+    const sbEntry = tilioteSbForAccount(sbPeriodId, accountId);
+    const sbDebit  = parseFloat(sbEntry.debit)  || 0;
+    const sbCredit = parseFloat(sbEntry.credit) || 0;
+    const sbDescription = (sbEntry.description && String(sbEntry.description).trim())
+      ? String(sbEntry.description).replace(/</g, '&lt;') : '';
+    if (sbDebit > 0)  ab.addEntry({ accountId: accountId, amountDebit: sbDebit,  amountCredit: 0 });
+    if (sbCredit > 0) ab.addEntry({ accountId: accountId, amountDebit: 0, amountCredit: sbCredit });
+
+    const beforeItems = collectTilioteEntriesBeforeDate(accountId, periodsForDocs, rangeStart);
+    sortTilioteItems(beforeItems, sortMode);
+    beforeItems.forEach(function (item) {
+      ab.addEntry(item.entry);
+    });
+    const openingBalance = ab.getBalance(accountId) || 0;
+
+    let items = collectTilioteEntriesForAccount(accountId, periodsForDocs, rangeStart, rangeEnd, includeUndated);
+    sortTilioteItems(items, sortMode);
+    items = filterTilioteDuplicateOpeningJournalLines(
+      account, accountId, periodsForDocs, items, sortMode, sbDebit, sbCredit, beforeItems
+    );
 
     const rows = [];
     let debitTotal = 0, creditTotal = 0;
@@ -973,18 +1324,16 @@
       rows.push({ date: doc.date, number: doc.number, description: e.description || '', debit: deb, credit: cred, balance: runBalance });
     });
 
-    // Format a signed balance – delegates to global formatNum.
     function fmtBalance(b) {
       const n = parseFloat(b);
       if (isNaN(n)) return formatNum(0);
       return formatNum(n);
     }
-    // Format debit/credit amount – blank when zero.
     function fmtAmt(n) { return n ? formatNum(n) : ''; }
 
     let html = '<h2>Tiliote</h2><p>' + (settings.name || '') + '</p>';
     html += '<p><strong>' + (account.number || '') + ' ' + (account.name || '') + '</strong></p>';
-    html += '<p>Tilikausi: ' + period.startDate + ' – ' + period.endDate + '</p>';
+    html += '<p>' + rangeLabelHtml + '</p>';
     html += '<p>Järjestys: ' + (sortMode === 'docnumber' ? 'Tositenumerojärjestys' : 'Aikajärjestys') + '</p>';
     html += '<table><thead><tr>' +
       '<th>Pvm</th><th>Nro</th><th>Selite</th>' +
@@ -994,7 +1343,8 @@
 
     // Opening balance row (only if non-zero).
     if (openingBalance !== 0) {
-      html += '<tr><td></td><td></td><td><em>Alkusaldo</em></td><td></td><td></td>' +
+      const sbSelite = '<em>Alkusaldo</em>' + (sbDescription ? ' — ' + sbDescription : '');
+      html += '<tr><td></td><td></td><td>' + sbSelite + '</td><td></td><td></td>' +
         '<td class="rd-num"><em>' + fmtBalance(openingBalance) + '</em></td></tr>';
     }
 
@@ -1020,7 +1370,35 @@
       '</tr>';
 
     html += '</tbody></table>';
-    showReportInPanel('Tiliote – ' + account.number, html);
+
+    const csvLines = [];
+    csvLines.push(csvEscapeField('Tiliote'));
+    if (settings.name) csvLines.push(csvEscapeField(settings.name));
+    csvLines.push(csvEscapeField(String((account.number || '') + ' ' + (account.name || '')).trim()));
+    csvLines.push(csvEscapeField(rangeLabelHtml));
+    csvLines.push(csvEscapeField('Järjestys: ' + (sortMode === 'docnumber' ? 'Tositenumerojärjestys' : 'Aikajärjestys')));
+    csvLines.push('');
+    csvLines.push(['Pvm', 'Nro', 'Selite', 'Debet', 'Kredit', 'Saldo'].map(csvEscapeField).join(';'));
+    if (openingBalance !== 0) {
+      const sbSeliteCsv = 'Alkusaldo' + (sbDescription ? ' — ' + sbDescription : '');
+      csvLines.push(['', '', sbSeliteCsv, '', '', fmtBalance(openingBalance)].map(csvEscapeField).join(';'));
+    }
+    rows.forEach(function (r) {
+      csvLines.push([
+        formatDate(r.date),
+        String(r.number != null ? r.number : ''),
+        (r.description || '').replace(/</g, ''),
+        fmtAmt(r.debit),
+        fmtAmt(r.credit),
+        fmtBalance(r.balance)
+      ].map(csvEscapeField).join(';'));
+    });
+    csvLines.push([entryCountLabel, '', '', formatNum(debitTotal), formatNum(creditTotal), fmtBalance(finalBalance)].map(csvEscapeField).join(';'));
+    const csvContent = csvLines.join('\r\n');
+    const csvFilename = String('Tiliote_' + (account.number || 'tili') + '_' + rangeStart + '_' + rangeEnd)
+      .replace(/[<>:"/\\|?*\s]+/g, '_') + '.csv';
+
+    showReportInPanel('Tiliote – ' + account.number, html, { csvContent: csvContent, csvFilename: csvFilename });
   }
 
   window.openReportIncomeStatement = function () {
@@ -1638,6 +2016,38 @@
     return accountRows;
   }
 
+  /**
+   * Java VATReportModel.addVatAmount: maksettava vero lähtee ALV-tilien (vatCode 2 ja 3) kirjauksista.
+   * EU-tavaraostojen käännetty vero voi kirjautua vain yhteisöostotilille (koodi 9) ilman vastaavaa 2/3-riviä;
+   * verottajan näkymässä täydennetään "Vero tavaraostoista muista EU-maista" -rivin määrällä (|r.vat|).
+   */
+  function javaStyleEntryAmountForVatPool(e) {
+    const deb = parseFloat(e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0)) || 0;
+    const cred = parseFloat(e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0)) || 0;
+    const mag = Math.abs(deb) > 0.0001 ? Math.abs(deb) : Math.abs(cred);
+    if (mag < 0.0001) return 0;
+    const isDebitSide = deb > 0.0001;
+    return isDebitSide ? -mag : mag;
+  }
+
+  function computeMaksettavaVeroFromVatPoolAccounts(documents, periodId) {
+    let total2 = 0;
+    let total3 = 0;
+    documents.forEach(function (doc) {
+      getEntriesByDocument(doc.id).forEach(function (e) {
+        if ((e.flags || 0) & 1) return;
+        const acc = accForPeriod(e.accountId, periodId);
+        if (!acc) return;
+        const code = acc.vatCode != null ? Number(acc.vatCode) : 0;
+        if (code !== 2 && code !== 3) return;
+        const vatAmount = javaStyleEntryAmountForVatPool(e);
+        if (code === 2) total2 += vatAmount;
+        if (code === 3) total3 += vatAmount;
+      });
+    });
+    return Math.round((total2 + total3) * 100) / 100;
+  }
+
   function runReportVat(period, startDate, endDate, settings, reportStyle) {
     const style = reportStyle || 'perinteinen';
     const documents = getDocuments(period.id, null).filter(doc => {
@@ -1703,6 +2113,10 @@
       const vat0 = sumVat(salesRows.filter(r => r.vatRate === 0));
       const veroOstotEUTavara = sumVat(purchaseEUTavara);
       const veroOstotEUPalvelu = sumVat(purchaseEUPalvelu);
+      const maksettavaVeroPool = computeMaksettavaVeroFromVatPoolAccounts(documents, period.id);
+      const maksettavaVeroVerottaja = Math.round(
+        (maksettavaVeroPool + Math.abs(veroOstotEUTavara)) * 100
+      ) / 100;
       const veroOstotEU = veroOstotEUTavara + veroOstotEUPalvelu;
       const veroRakentaminenOstot = sumVat(purchaseConstruction);
       const veroOstotKotimaa = sumVat(purchaseDomestic);
@@ -1733,7 +2147,7 @@
       html += '<tr><td>Alarajahuojennukseen oikeuttava liikevaihto</td><td class="text-right">' + formatReportNumEuro(alarajaLiikevaihto) + '</td></tr>';
       html += '<tr><td>Alarajahuojennukseen oikeuttava vero</td><td class="text-right"></td></tr>';
       html += '<tr><td>Alarajahuojennuksen määrä</td><td class="text-right"></td></tr>';
-      html += '<tr class="vat-final"><td><strong>Maksettava vero</strong></td><td class="text-right">' + formatReportNumEuro(totalVatFromRows) + '</td></tr></table>';
+      html += '<tr class="vat-final"><td><strong>Maksettava vero</strong></td><td class="text-right">' + formatReportNumEuro(maksettavaVeroVerottaja) + '</td></tr></table>';
       html += '<h2>Myynnit, ostot ja maahantuonnit</h2>';
       html += '<table class="report-vat-table report-vat-verottaja-table">';
       html += '<tr><td>0-verokannan alainen liikevaihto</td><td class="text-right">' + formatReportNumEuro(sumBase(accountRows.filter(r => (r.vatCode === 6 || r.vatCode === 8) && r.vatRate === 0))) + '</td></tr>';

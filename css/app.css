@@ -887,6 +887,26 @@ body {
   gap: 8px;
   cursor: pointer;
 }
+.panel-tiliote-picker .tiliote-range-row {
+  margin: 10px 0 12px;
+}
+.panel-tiliote-picker .tiliote-range-row label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.panel-tiliote-picker .tiliote-range-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
 .panel-tiliote-picker .tiliote-account-select {
   width: 100%;
   box-sizing: border-box;

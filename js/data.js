@@ -922,6 +922,7 @@ function recordSqliteBackup() {
 }
 
 // --- Starting balances (stored per account per period) ---
+// Each value: { debit?: number, credit?: number, description?: string } — description shown e.g. on Tiliote / Pääkirja.
 function getStartingBalances(periodId) {
   const key = APP_KEY + 'starting_balances_' + periodId;
   try {

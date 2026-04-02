@@ -316,7 +316,8 @@
       const netAmount = isDebit ? netDebit : netCredit;
       const vatAmt = e.vatAmount != null ? Number(e.vatAmount) : 0;
 
-      const isVatCounterAccount = acc && (String(acc.number) === '76611' || String(acc.number) === '76621' || Number(acc.vatCode) === 2 || Number(acc.vatCode) === 3);
+      /** Vain 76611/76621 ovat UI:n “vastatili”-rivejä (debit/credit 0, ALV sarakkeessa). ALV-välilitit 29391–29394 jne. tallentuvat normaalisti summilla — vatCode 2/3 ei saa nollata niitä. */
+      const isVatCounterAccount = acc && (String(acc.number) === '76611' || String(acc.number) === '76621');
       if (isVatCounterAccount) {
         out.push({
           id: e.id || null,
@@ -530,6 +531,168 @@
       state.documentIndex = state.documents.length - 1;
     }
     render();
+  }
+
+  /**
+   * Mitkä viennit kuuluvat ALV-välilitteiden saldoon (Java createVATDocument).
+   * Pelkkä ALV-koodi 2/3 ei riitä: tileillä 29391… voi olla koodi 0; EU-käännetty vero on näillä
+   * sekä riveillä rowNumber +200000 / +300000. Koodi 2/3 ei saa ottaa mukaan osto-/myyntitilejä — vain velka.
+   * (Vrt. reports.js: maksettava vero -lomake täydentää EU-tavaraerää; kirjanpidossa sama näkyy 2939x-saldoissa.)
+   */
+  const ACCOUNT_TYPE_LIABILITY = 1;
+  function accountIncludedInVatClosingBalances(acc) {
+    if (!acc) return false;
+    const n = String(acc.number || '');
+    if (/^(2939|2940)\d/.test(n)) return true;
+    const vc = Number(acc.vatCode);
+    const t = acc.type != null ? Number(acc.type) : -1;
+    if ((vc === 2 || vc === 3) && t === ACCOUNT_TYPE_LIABILITY) return true;
+    return false;
+  }
+
+  /**
+   * Työkalut → ALV-tilien päättäminen (Tilitin DocumentModel.createVATDocument).
+   * Laskee ALV-välilittejen saldot, kirjaa ne nollaksi ja tasaa arvonlisäverovelkatilille.
+   */
+  function createVatClosingDocument() {
+    if (state.changed) {
+      saveDocumentToStore();
+      if (state.changed) return;
+    }
+    document.querySelectorAll('.menu-dropdown').forEach(function (d) { d.classList.add('hidden'); });
+
+    const period = getPeriod();
+    if (!period) {
+      alert('Valitse tilikausi ensin.');
+      return;
+    }
+    if (period.locked) {
+      showLockedPeriodNotice();
+      return;
+    }
+    const docType = getDocType();
+    if (!docType) {
+      alert('Valitse tositelaji.');
+      return;
+    }
+
+    const accounts = getAccounts();
+    const accountsForPeriod = accounts.map(function (a) {
+      return getAccountByIdForPeriod(a.id, period.id);
+    }).filter(Boolean);
+
+    const balances = new AccountBalances(accountsForPeriod);
+
+    getDocuments(period.id).forEach(function (d) {
+      if (!d || d.id == null) return;
+      getEntriesByDocument(d.id).forEach(function (e) {
+        const acc = e.accountId ? getAccountByIdForPeriod(e.accountId, period.id) : null;
+        if (!acc || !accountIncludedInVatClosingBalances(acc)) return;
+        const copy = Object.assign({}, e);
+        normalizeEntry(copy);
+        balances.addEntry(copy);
+      });
+    });
+
+    let debtAccount = null;
+    accounts.forEach(function (a) {
+      const acc = getAccountByIdForPeriod(a.id, period.id);
+      if (acc && Number(acc.vatCode) === 1) {
+        debtAccount = acc;
+      }
+    });
+    if (!debtAccount) {
+      const cand = accounts.map(function (a) { return getAccountByIdForPeriod(a.id, period.id); }).filter(Boolean);
+      debtAccount = cand.find(function (acc) {
+        const n = String(acc.number || '');
+        return n === '2939' || n === '2930';
+      }) || null;
+    }
+
+    const closingSpecs = [];
+    accounts.forEach(function (a) {
+      const bal = balances.getBalance(a.id);
+      if (bal == null) return;
+      const rounded = Math.round(bal * 100) / 100;
+      if (Math.abs(rounded) < 0.005) return;
+      closingSpecs.push({ accountId: a.id, balance: rounded });
+    });
+
+    let debt = 0;
+    closingSpecs.forEach(function (s) {
+      debt += s.balance;
+    });
+    debt = Math.round(debt * 100) / 100;
+
+    if (closingSpecs.length === 0 && Math.abs(debt) < 0.005) {
+      alert('Ei ALV-välitilien (esim. 29391–29399, 29401–) saldoa, joka pitäisi päättää tällä tilikaudella.');
+      return;
+    }
+
+    if (!debtAccount) {
+      alert('Arvonlisäverovelkatiliä ei ole määritetty.');
+      return;
+    }
+
+    const storedDocs = getDocumentsForDocTypeStrict(period.id, docType.id).filter(function (d) { return d && d.id; });
+    const existingNumbers = storedDocs.map(function (d) { return parseInt(d.number, 10); }).filter(function (n) { return !isNaN(n); });
+    const baseStart = (docType.numberStart != null ? parseInt(docType.numberStart, 10) : 1) || 1;
+    const maxExisting = existingNumbers.length ? Math.max.apply(null, existingNumbers) : (baseStart - 1);
+    let nextNum = maxExisting + 1;
+    const endLimit = (docType.numberEnd != null && docType.numberEnd !== '') ? parseInt(docType.numberEnd, 10) : null;
+    if (endLimit != null && !isNaN(endLimit) && nextNum > endLimit) {
+      alert('Uutta tositetta ei voi lisätä: tositenumero ylittäisi tositelajin numerovälin (' + (docType.numberStart ?? '') + '–' + (docType.numberEnd ?? '') + ').');
+      return;
+    }
+
+    const docDate = period.endDate || period.startDate;
+    const newDoc = {
+      id: null,
+      number: nextNum,
+      date: docDate,
+      periodId: period.id,
+      documentTypeId: docType.id
+    };
+    saveDocument(newDoc);
+    const docId = newDoc.id;
+
+    let rowNum = 0;
+    closingSpecs.forEach(function (s) {
+      const b = s.balance;
+      saveEntry({
+        id: null,
+        documentId: docId,
+        accountId: s.accountId,
+        amountDebit: b > 0 ? b : 0,
+        amountCredit: b < 0 ? -b : 0,
+        vatAmount: 0,
+        description: '',
+        rowNumber: rowNum++,
+        flags: 1
+      });
+    });
+
+    if (Math.abs(debt) >= 0.005) {
+      const d = debt;
+      saveEntry({
+        id: null,
+        documentId: docId,
+        accountId: debtAccount.id,
+        amountDebit: d < 0 ? -d : 0,
+        amountCredit: d > 0 ? d : 0,
+        vatAmount: 0,
+        description: '',
+        rowNumber: rowNum++,
+        flags: 0
+      });
+    }
+
+    loadDocuments();
+    const idx = state.documents.findIndex(function (d) { return d && Number(d.id) === Number(docId); });
+    state.documentIndex = idx >= 0 ? idx : Math.max(0, state.documents.length - 1);
+    loadCurrentDocument();
+    render();
+    scheduleSuggestIndexBuild(300);
   }
 
   function createNewDocument() {
@@ -1187,7 +1350,8 @@
       'menuRaporttipohja',
       'menuBulkImport',
       'menuDocumentNumberShift',
-      'menuCheckBalances'
+      'menuCheckBalances',
+      'menuVatClosing'
     ];
     ids.forEach(function (id) {
       const el = document.getElementById(id);
@@ -2126,6 +2290,7 @@
     document.getElementById('menuBulkImport').onclick = () => { if (state.changed && !confirm('Tallenna muutokset ensin?')) return; window.openBulkImportPanel && window.openBulkImportPanel(); };
     document.getElementById('menuDocumentNumberShift').onclick = () => { if (state.changed && !confirm('Tallenna muutokset ensin?')) return; window.openDocumentNumberShiftPanel && window.openDocumentNumberShiftPanel(); };
     document.getElementById('menuCheckBalances').onclick = () => { if (state.changed && !confirm('Tallenna muutokset ensin?')) return; window.openCheckBalancesPanel && window.openCheckBalancesPanel(); };
+    document.getElementById('menuVatClosing').onclick = () => createVatClosingDocument();
     document.getElementById('menuRaporttipohja').onclick = () => { window.openRaporttipohjaPanel && window.openRaporttipohjaPanel(); };
     document.getElementById('menuClearAllData').onclick = () => {
       if (!confirm('Haluatko varmasti tyhjentää kaikki tiedot?\n\nKaikki tilikartat, tilikaudet, tositteet ja viennit poistetaan. Tätä toimintoa ei voi perua.')) return;

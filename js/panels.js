@@ -1387,23 +1387,28 @@
       html += '<p style="margin:0 0 12px;font-size:0.88rem;color:var(--text-muted);">Ehdotetut arvot lasketaan edellisen tilikauden (' +
         formatDate(prevResult.previousPeriod.startDate) + ' – ' + formatDate(prevResult.previousPeriod.endDate) + ') loppusaldosta (kuten Pääkirjassa).</p>';
     }
+    html += '<div class="form-group" style="margin:0 0 12px;max-width:420px;">' +
+      '<label for="sb-account-filter">Suodata</label>' +
+      '<input type="search" id="sb-account-filter" class="form-control" placeholder="Tilinumero tai nimi…" autocomplete="off">' +
+      '</div>';
     html += '<p style="margin:0 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
       '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
       '<input type="checkbox" id="sb-hide-empty">' +
       '<span>Älä näytä tyhjiä</span></label></p>';
-    html += '<table class="data-table sb-starting-balances-table"><thead><tr><th>Tili</th><th>Alkusaldo debet</th><th>Alkusaldo kredit</th></tr></thead><tbody>';
+    html += '<table class="data-table sb-starting-balances-table"><thead><tr><th>Tili</th><th>Alkusaldo debet</th><th>Alkusaldo kredit</th><th>Selite</th></tr></thead><tbody>';
     accounts.forEach(function (a) {
       const sug = getSuggestedAmounts(a.id);
       const saved = balances[a.id];
       let debStr = '';
       let credStr = '';
-      if (saved && (saved.debit || saved.credit)) {
+      if (saved && (saved.debit || saved.credit || (saved.description && String(saved.description).trim()))) {
         debStr = saved.debit ? formatNum(saved.debit) : '';
         credStr = saved.credit ? formatNum(saved.credit) : '';
       } else {
         debStr = sug.debit ? formatNum(sug.debit) : '';
         credStr = sug.credit ? formatNum(sug.credit) : '';
       }
+      const descStr = saved && saved.description != null ? String(saved.description).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') : '';
       const hintStyle = 'font-size:0.78rem;color:var(--text-muted);white-space:nowrap;';
       html += '<tr data-account-id="' + a.id + '"><td>' + (a.number || '') + ' ' + (a.name || '') + '</td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
@@ -1411,7 +1416,8 @@
         '<span class="sb-edited-debit" style="' + hintStyle + '" hidden>käyttäjän muokkaama</span></div></td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
         '<input type="text" class="sb-credit" value="' + credStr + '">' +
-        '<span class="sb-edited-credit" style="' + hintStyle + '" hidden>käyttäjän muokkaama</span></div></td></tr>';
+        '<span class="sb-edited-credit" style="' + hintStyle + '" hidden>käyttäjän muokkaama</span></div></td>';
+      html += '<td><input type="text" class="sb-description" placeholder="Valinnainen" value="' + descStr + '"></td></tr>';
     });
     html += '</tbody></table>';
     const closeBtn = document.createElement('button');
@@ -1428,7 +1434,12 @@
         const accountId = parseInt(tr.dataset.accountId, 10);
         const deb = parseNum(tr.querySelector('.sb-debit').value);
         const cred = parseNum(tr.querySelector('.sb-credit').value);
-        if (deb || cred) newBalances[accountId] = { debit: deb, credit: cred };
+        const descEl = tr.querySelector('.sb-description');
+        const desc = descEl ? String(descEl.value || '').trim() : '';
+        if (deb || cred || desc) {
+          newBalances[accountId] = { debit: deb, credit: cred };
+          if (desc) newBalances[accountId].description = desc;
+        }
       });
       saveStartingBalances(period.id, newBalances);
       closePanel();
@@ -1447,31 +1458,38 @@
       credHint.hidden = Math.abs(cred - sug.credit) < 0.005;
     }
 
-    function applyHideEmpty() {
-      const hide = overlay.querySelector('#sb-hide-empty');
-      const on = hide && hide.checked;
+    function refreshStartingBalancesPanelUi() {
+      overlay.querySelectorAll('tbody tr').forEach(updateRowMarkers);
+      const filterEl = overlay.querySelector('#sb-account-filter');
+      const q = (filterEl && filterEl.value ? filterEl.value : '').trim().toLowerCase();
+      const hideChkEl = overlay.querySelector('#sb-hide-empty');
+      const hideEmpty = hideChkEl && hideChkEl.checked;
       overlay.querySelectorAll('tbody tr').forEach(function (tr) {
         const deb = parseNum(tr.querySelector('.sb-debit').value);
         const cred = parseNum(tr.querySelector('.sb-credit').value);
-        const empty = Math.abs(deb) < 0.005 && Math.abs(cred) < 0.005;
-        tr.style.display = on && empty ? 'none' : '';
+        const descEl = tr.querySelector('.sb-description');
+        const desc = descEl ? String(descEl.value || '').trim() : '';
+        const empty = Math.abs(deb) < 0.005 && Math.abs(cred) < 0.005 && !desc;
+        const firstTd = tr.querySelector('td');
+        const rowText = (firstTd && firstTd.textContent || '').toLowerCase();
+        const matchFilter = !q || rowText.indexOf(q) !== -1;
+        const hideForEmpty = hideEmpty && empty;
+        tr.style.display = matchFilter && !hideForEmpty ? '' : 'none';
       });
     }
 
-    function refreshStartingBalancesPanelUi() {
-      overlay.querySelectorAll('tbody tr').forEach(updateRowMarkers);
-      applyHideEmpty();
-    }
-
-    overlay.querySelectorAll('tbody tr').forEach(updateRowMarkers);
-    applyHideEmpty();
+    refreshStartingBalancesPanelUi();
     overlay.addEventListener('input', function (e) {
       const t = e.target;
-      if (!t.classList || (!t.classList.contains('sb-debit') && !t.classList.contains('sb-credit'))) return;
+      if (t && t.id === 'sb-account-filter') {
+        refreshStartingBalancesPanelUi();
+        return;
+      }
+      if (!t.classList || (!t.classList.contains('sb-debit') && !t.classList.contains('sb-credit') && !t.classList.contains('sb-description'))) return;
       refreshStartingBalancesPanelUi();
     });
     const hideChk = overlay.querySelector('#sb-hide-empty');
-    if (hideChk) hideChk.addEventListener('change', applyHideEmpty);
+    if (hideChk) hideChk.addEventListener('change', refreshStartingBalancesPanelUi);
   };
 
   window.openCheckBalancesPanel = function () {
