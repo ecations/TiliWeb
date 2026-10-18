@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TiliWeb</title>
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/app.css?v=2026-10-18-1">
 </head>
 <body>
   <div class="app">
@@ -181,6 +181,7 @@
           <div class="doc-type-bar">
             <label for="docTypeSelect" class="doc-type-bar-label">Tositelaji:</label>
             <select id="docTypeSelect"></select>
+            <button type="button" id="btnReceiptOcr" class="btn receipt-ocr-button" title="Tunnista kuitti ja ehdota uutta tositetta">OCR – lue kuitti</button>
           </div>
           <div class="doc-form-header">
             <label for="docNumber">Tositenumero</label>
@@ -262,7 +263,7 @@
   <script>window.TILITIN_BUILD = '2026-02-28-46';</script>
   <script src="js/vat-util.js?v=2026-02-28-46"></script>
   <script src="js/account-balances.js?v=2026-02-28-46"></script>
-  <script src="js/data.js?v=2026-02-28-46"></script>
+  <script src="js/data.js?v=2026-10-18-2"></script>
   <script src="js/import-sql.js?v=2026-02-28-46"></script>
   <script src="js/tilitin-default-reports.js?v=2026-02-28-46"></script>
   <script src="js/export-sqlite.js?v=2026-02-28-46"></script>
@@ -270,7 +271,8 @@
   <script src="js/panels.js?v=2026-02-28-46"></script>
   <script src="js/reports.js?v=2026-02-28-46"></script>
   <div id="appLockedHint" class="app-locked-hint hidden" role="status" aria-live="polite"></div>
-  <script src="js/app.js?v=2026-02-28-46"></script>
+  <script src="js/receipt-ocr.js?v=2026-10-18-2"></script>
+  <script src="js/app.js?v=2026-10-18-2"></script>
   <script>
     document.querySelectorAll('.menu-trigger').forEach(trigger => {
       trigger.addEventListener('click', (e) => {

@@ -338,6 +338,7 @@
           amountDebit: isDebit ? netAmount : 0,
           amountCredit: !isDebit ? netAmount : 0,
           vatAmount: vatAmt || 0,
+          ...(e.receiptVatAmount != null ? { receiptVatAmount: e.receiptVatAmount } : {}),
           description: e.description || '',
           rowNumber: i,
           flags: e.flags || 0
@@ -718,6 +719,38 @@
     }
   }
 
+  function openReceiptOcr() {
+    const period = getPeriod();
+    const docType = getDocType();
+    if (!period || !docType) { alert('Valitse tilikausi ja tositelaji.'); return; }
+    if (period.locked) { showLockedPeriodNotice(); return; }
+    // Never discard or implicitly save another voucher when importing a receipt.
+    if (state.changed) { alert('Tallenna keskeneräinen tosite ennen kuitin lukemista.'); return; }
+    window.ReceiptOcr.open({
+      period, accounts: getAccounts(),
+      accept: function (proposal) {
+        if (getPeriod()?.id !== period.id || getDocType()?.id !== docType.id || getPeriod()?.locked || state.changed) {
+          throw new Error('Tilikausi, tositelaji tai nykyinen tosite muuttui. Sulje kuittinäkymä ja avaa se uudelleen.');
+        }
+        const previous = state.document;
+        createNewDocumentInternal(period, docType, 'end');
+        if (state.document === previous) throw new Error('Uuden tositteen luominen ei onnistunut. Tarkista tositenumerointi.');
+        state.document.date = proposal.date;
+        state.entries = [
+          { accountId: 0, amountDebit: proposal.amount, amountCredit: 0, vatAmount: proposal.vatAmount || 0,
+            ...(proposal.vatAmount != null ? { receiptVatAmount: proposal.vatAmount } : {}) },
+          { accountId: proposal.bankAccountId, amountDebit: 0, amountCredit: proposal.amount, vatAmount: 0 }
+        ].map((entry, rowNumber) => ({ ...entry, id: null, documentId: null,
+          description: proposal.description, rowNumber, flags: 0 }));
+        state.selectedEntryIndices = [];
+        state.entrySelectionAnchorIndex = null;
+        state.suggestActive = false;
+        state.changed = true;
+        render();
+      }
+    });
+  }
+
   function deleteCurrentDocument() {
     if (!state.document) return;
     if (!isDocumentEditable()) {
@@ -1062,20 +1095,33 @@
 
   function updateEntryAccount(rowIndex, accountId) {
     const e = state.entries[rowIndex];
+    const previousAccount = e.accountId ? getAccountById(e.accountId) : null;
+    const receiptGross = Math.round(((e.amountDebit || e.amountCredit || 0) +
+      (accountHasVat(previousAccount) ? (e.vatAmount || 0) : 0)) * 100) / 100;
     e.accountId = accountId;
     const acc = accountId ? getAccountById(accountId) : null;
-    if (!accountHasVat(acc)) {
+    if (e.receiptVatAmount != null && !isReverseChargeVat(acc)) {
+      // OCR begins with a gross, unassigned expense. Preserve the receipt's actual
+      // tax (including rounding/multiple rates) when a VAT account is selected.
+      const amount = accountHasVat(acc) ? Math.round((receiptGross - e.receiptVatAmount) * 100) / 100 : receiptGross;
+      if (e.amountDebit > 0) e.amountDebit = amount; else e.amountCredit = amount;
+      e.vatAmount = e.receiptVatAmount;
+    } else if (!accountHasVat(acc)) {
       e.vatAmount = 0;
     } else {
       const rate = getAccountVatRate(acc);
       const net = e.amountDebit > 0 ? e.amountDebit : e.amountCredit;
       e.vatAmount = isReverseChargeVat(acc) ? vatFromNet(net, rate) : vatFromNet(net, rate);
     }
+    if (isReverseChargeVat(acc)) delete e.receiptVatAmount;
     state.changed = true;
+    render();
   }
 
   function updateEntryAmount(rowIndex, isDebit, amount) {
     const e = state.entries[rowIndex];
+    // A newly typed amount uses the account's normal VAT calculation again.
+    delete e.receiptVatAmount;
     const v = parseFloat(amount) || 0;
     const acc = e.accountId ? getAccountById(e.accountId) : null;
     if (!accountHasVat(acc)) {
@@ -1225,6 +1271,7 @@
         amountDebit: e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0),
         amountCredit: e.amountCredit != null ? e.amountCredit : (!e.debit ? (e.amount || 0) : 0),
         vatAmount: e.vatAmount != null ? e.vatAmount : 0,
+        ...(e.receiptVatAmount != null ? { receiptVatAmount: e.receiptVatAmount } : {}),
         description: e.description || ''
       };
     });
@@ -1249,6 +1296,7 @@
         amountDebit: clip.amountDebit != null ? clip.amountDebit : 0,
         amountCredit: clip.amountCredit != null ? clip.amountCredit : 0,
         vatAmount: clip.vatAmount != null ? clip.vatAmount : 0,
+        ...(clip.receiptVatAmount != null ? { receiptVatAmount: clip.receiptVatAmount } : {}),
         description: clip.description || '',
         rowNumber: state.entries.length,
         flags: 0
@@ -1316,6 +1364,7 @@
     const btnNew = document.getElementById('btnNewDoc');
     const newGrey = !!(period && docType && periodLocked);
     btnNew.disabled = !period || !docType;
+    document.getElementById('btnReceiptOcr').disabled = !period || !docType || periodLocked;
     btnNew.classList.toggle('btn-locked-blocked', newGrey);
 
     const docEditBlocked = !!(state.document && periodLocked && !canEdit);
@@ -1532,7 +1581,7 @@
 
       const vatInput = document.createElement('input');
       vatInput.type = 'text';
-      vatInput.value = vatAmt ? formatNum(vatAmt) : '';
+      vatInput.value = vatAmt || entry.receiptVatAmount != null ? formatNum(vatAmt) : '';
       vatInput.disabled = true;
 
       const descInput = document.createElement('input');
@@ -2051,6 +2100,7 @@
     const btnLast = document.getElementById('btnLast');
     if (btnLast) btnLast.onclick = () => goToDocument('last');
     document.getElementById('btnNewDoc').onclick = createNewDocument;
+    document.getElementById('btnReceiptOcr').onclick = openReceiptOcr;
     document.getElementById('btnDeleteDoc').onclick = deleteCurrentDocument;
     document.getElementById('btnAddEntry').onclick = addEntry;
     document.getElementById('btnRemoveEntry').onclick = () => {

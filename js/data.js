@@ -637,6 +637,8 @@ function getEntriesForDisplay(documentId) {
   const hasVatRows = raw.some(e => (e.rowNumber || 0) >= 100000);
   if (!hasVatRows) {
     const flatDisplay = raw.map(e => {
+      // An OCR tax suggestion on a gross/unassigned expense is not a VAT-only row.
+      if (e.receiptVatAmount != null) return { ...e };
       const acc = e.accountId ? getAccountById(e.accountId) : null;
       const vatAmt = parseFloat(e.vatAmount) || 0;
       const deb = parseFloat(e.amountDebit != null ? e.amountDebit : (e.debit ? (e.amount || 0) : 0));
@@ -707,7 +709,7 @@ function getEntriesForDisplay(documentId) {
     const storedAmt = stored > 0 ? stored : storedCred;
     const isDebit = stored > 0;
 
-    let vatAmount = 0;
+    let vatAmount = e.receiptVatAmount != null ? vatAmtStored : 0;
 
     if (vat2) {
       const v2 = parseFloat(vat2.amountDebit != null ? vat2.amountDebit : (vat2.debit ? (vat2.amount || 0) : 0)) || 0;

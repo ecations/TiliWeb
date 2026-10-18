@@ -28,6 +28,18 @@ Toiseen suuntaan siirtyminen on myös mahdollista: TiliWebistä voi viedä kirja
 
 ## Ominaisuuksia
 
+### Kuitin lukeminen OCR:llä
+
+Tositteet-näkymän tositelajirivin oikeassa reunassa oleva **OCR – lue kuitti** avaa kuitin tuonnin. Valitse tai raahaa yksi JPG-, PNG- tai WebP-kuva (enintään 20 Mt). Tarkista ja muokkaa ostopäivä, loppusumma veroineen, summaan sisältyvä ALV ja selite kuvan vieressä. Hyväksyminen luo uuden **tallentamattoman** tositteen: kulurivin debet ja maksutilin kredit ovat loppusumman suuruiset. Kuitista tunnistettu ALV näkyy kulurivin ALV-sarakkeessa, eikä sitä lisätä bruttosummaan. Kulutili jää tyhjäksi; pankkitiliä ehdotetaan vain, jos tilikartassa on yksi selvästi nimetty pankkitili. Täydennä tilit ennen tavallista tallennusta.
+
+ALV tunnistetaan kuitin ALV-yhteissummasta, verokantakohtaisista ALV-riveistä tai otsikoidusta verotaulukosta. Epäselvä summa jää tyhjäksi, ja sen voi täydentää käsin (myös 0,00). Usean verokannan ALV:t lasketaan yhteen; jaa kulut tarvittaessa omille riveilleen. Tarkista vähennyskelpoisuus itse. ALV-tiliä valittaessa kuitin tarkistettu ALV säilyy ja kulun nettosumma muodostetaan sisäisesti, mutta debet/kredit näyttävät edelleen bruton. Jos muutat tositteen debet/kredit-summaa myöhemmin, ALV lasketaan uudelleen tilin asetuksilla.
+
+OCR käyttää selaimessa [Tesseract.js:ää](https://github.com/naptha/tesseract.js) (6.0.1, suomi ja englanti). Kuvaa tai tunnistettua tekstiä ei lähetetä palvelimelle. OCR-ohjelma ja kielitiedostot ladataan jsDelivristä, joten OCR tarvitsee internet-yhteyden; ohjelman muut offline-toiminnot säilyvät ennallaan. Tunnistus on avustava: epäselvä päivämäärä tai loppusumma jätetään tyhjäksi ja käyttäjä täydentää sen. Vieraan valuutan kuitti edellyttää euromäärän täyttämistä käsin. Kuittikuvaa ei tallenneta tositteen liitteeksi tässä versiossa, joten säilytä alkuperäinen kuitti erikseen.
+
+OCR-parserin testit: `node --test tests/receipt-ocr.test.js`.
+
+### Muut ominaisuudet
+
 - Kahdenkertainen kirjanpito tilikausikohtaisesti
 - Vapaavalintainen tilikartta ja valmiit tilikarttamallit (pienyritys, yhdistys, maatalous…)
 - Arvonlisäverolaskelmat ja ALV-raportti Verohallintoa varten
