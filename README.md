@@ -34,9 +34,13 @@ Tositteet-näkymän tositelajirivin oikeassa reunassa oleva **OCR – lue kuitti
 
 ALV tunnistetaan kuitin ALV-yhteissummasta, verokantakohtaisista ALV-riveistä tai otsikoidusta verotaulukosta. Epäselvä summa jää tyhjäksi, ja sen voi täydentää käsin (myös 0,00). Usean verokannan ALV:t lasketaan yhteen; jaa kulut tarvittaessa omille riveilleen. Tarkista vähennyskelpoisuus itse. ALV-tiliä valittaessa kuitin tarkistettu ALV säilyy ja kulun nettosumma muodostetaan sisäisesti, mutta debet/kredit näyttävät edelleen bruton. Jos muutat tositteen debet/kredit-summaa myöhemmin, ALV lasketaan uudelleen tilin asetuksilla.
 
-OCR käyttää selaimessa [Tesseract.js:ää](https://github.com/naptha/tesseract.js) (6.0.1, suomi ja englanti). Kuvaa tai tunnistettua tekstiä ei lähetetä palvelimelle. OCR-ohjelma ja kielitiedostot ladataan jsDelivristä, joten OCR tarvitsee internet-yhteyden; ohjelman muut offline-toiminnot säilyvät ennallaan. Tunnistus on avustava: epäselvä päivämäärä tai loppusumma jätetään tyhjäksi ja käyttäjä täydentää sen. Vieraan valuutan kuitti edellyttää euromäärän täyttämistä käsin. Kuittikuvaa ei tallenneta tositteen liitteeksi tässä versiossa, joten säilytä alkuperäinen kuitti erikseen.
+OCR käyttää selaimessa [Tesseract.js:ää](https://github.com/naptha/tesseract.js) (6.0.1, suomi ja englanti). OCR toimii myös avaamalla `index.html` suoraan: internet-yhteyttä, verkkopalvelinta tai asennusta ei tarvita. Pidä koko TiliWeb-kansio mukana, erityisesti `js/vendor/ocr/ocr-local.js`. Noin 12,5 MiB:n OCR-paketti sisältää tunnistusmoottorin ja molemmat kielet, ja se luetaan vasta OCR:ää käytettäessä. Kuvaa tai tunnistettua tekstiä ei lähetetä minnekään, eikä OCR hae tiedostoja ulkopuolisista palveluista.
+
+Tunnistus on avustava: tunnistetut päivämäärät tarjotaan valikossa, ja vaihtoehto **Aseta päivämäärä** avaa käsinsyötön. Epäselvä loppusumma tai ALV jätetään käyttäjän tarkistettavaksi. Vieraan valuutan kuitti edellyttää euromäärän täyttämistä käsin. Kuittikuvaa ei tallenneta tositteen liitteeksi tässä versiossa, joten säilytä alkuperäinen kuitti erikseen.
 
 OCR-parserin testit: `node --test tests/receipt-ocr.test.js`.
+
+Kehittäjille: `node scripts/build-local-ocr.js` rakentaa paikallisen OCR-paketin kiinnitetyistä riippuvuusversioista (vain rakentaminen tarvitsee Node 18+:n ja internetin). Lähteet ja SHA-256-tarkisteet ovat tiedostossa `js/vendor/ocr/manifest.json`, lisenssit samassa kansiossa. Playwrightilla ajettava `node tests/receipt-ocr-offline.cjs` tarkistaa oikean OCR:n suoraan `file://`-osoitteessa, tyhjässä selainprofiilissa ja verkkoyhteys estettynä. Oletusselain on Chrome; ympäristömuuttuja `TILIWEB_TEST_BROWSER=msedge` valitsee Edgen.
 
 ### Muut ominaisuudet
 

@@ -71,8 +71,6 @@
     const lines = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     const dates = new Set();
     lines.forEach(line => {
-      // A warranty/expiry date is not the transaction date.
-      if (/eräpäiv|voimassa|parasta ennen|viimeinen käyttö|expiry|due date/i.test(line)) return;
       const pattern = /\b(?:(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})|(\d{1,2})[./-](\d{1,2})[./-](\d{4}|\d{2}))\b/g;
       for (const m of line.matchAll(pattern)) {
         let year = Number(m[1] || m[6]);
@@ -108,22 +106,22 @@
       .slice(0, 3).map(line => line.replace(/\s+[-−]?\d+[,.]\d{2}.*$/, '').trim()).filter(Boolean);
     const description = [merchant, products.join(', ')].filter(Boolean).join(' – ').slice(0, 250);
     const warnings = [];
-    if (!date) warnings.push(dates.size > 1 ? 'Kuitissa on useita päivämääriä. Valitse ostopäivä.' : 'Ostopäivää ei tunnistettu varmasti. Täytä päivämäärä.');
+    if (!date) warnings.push(dates.size > 1 ? 'Kuitissa on useita päivämääriä. Valitse ostopäivä.' : 'Ostopäivää ei tunnistettu varmasti. Valitse ”Aseta päivämäärä”.');
     if (!amount) warnings.push(foreign ? 'Kuitissa on vieras valuutta. Täytä kirjanpidon euromääräinen summa.' : 'Loppusummaa ei tunnistettu varmasti. Tarkista ja täytä summa.');
     if (vatAmount == null) warnings.push('ALV-summaa ei tunnistettu varmasti. Tarkista se kuitista; tyhjä kenttä ei tarkoita verotonta ostoa.');
-    return { date, amount, vatAmount, description, warnings };
+    return { date, dates: [...dates], amount, vatAmount, description, warnings };
   }
 
   let libraryPromise;
   function loadLibrary() {
-    if (root.Tesseract) return Promise.resolve(root.Tesseract);
+    if (root.TiliWebLocalOcr) return Promise.resolve(root.TiliWebLocalOcr);
     if (!libraryPromise) {
       libraryPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        const fail = () => { clearTimeout(timer); script.remove(); reject(new Error('OCR-ohjelman lataus epäonnistui. Tarkista internet-yhteys ja yritä uudelleen.')); };
+        const fail = () => { clearTimeout(timer); script.remove(); reject(new Error('Paikallisen OCR-ohjelman lataus epäonnistui. Varmista, että js/vendor/ocr/ocr-local.js on mukana TiliWeb-kansiossa.')); };
         const timer = setTimeout(fail, 30000);
-        script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js';
-        script.onload = () => { clearTimeout(timer); resolve(root.Tesseract); };
+        script.src = 'js/vendor/ocr/ocr-local.js?v=2026-10-19-1';
+        script.onload = () => { if (!root.TiliWebLocalOcr) { fail(); return; } clearTimeout(timer); resolve(root.TiliWebLocalOcr); };
         script.onerror = fail;
         document.head.appendChild(script);
       }).catch(error => { libraryPromise = null; throw error; });
@@ -137,7 +135,7 @@
     dialog.setAttribute('aria-labelledby', 'receiptOcrTitle');
     dialog.innerHTML = `
       <div class="receipt-ocr-heading"><h2 id="receiptOcrTitle">Lue kuitti</h2><button type="button" data-close aria-label="Sulje kuittinäkymä">Sulje</button></div>
-      <p>Kuitin tunnistus tehdään tässä selaimessa. OCR-ohjelman ja kielitiedostojen lataamiseen tarvitaan internet-yhteys. Kuvaa ei lähetetä palvelimelle.</p>
+      <p>Kuitin tunnistus toimii kokonaan paikallisesti tässä selaimessa. Internet-yhteyttä tai palvelinta ei tarvita. Kuvaa ei lähetetä minnekään.</p>
       <div class="receipt-ocr-drop" data-drop>
         <p>Raahaa kuitin kuva tähän tai valitse tiedosto.</p>
         <button type="button" data-choose>Valitse kuitin kuva</button>
@@ -150,7 +148,8 @@
         <form data-form>
           <h3>Kirjausehdotus</h3>
           <p data-warnings class="receipt-ocr-warnings"></p>
-          <label>Ostopäivä<input data-date type="date" required></label>
+          <label>Ostopäivä<select data-date-choice required aria-controls="receiptOcrManualDate"></select></label>
+          <label id="receiptOcrManualDate" data-manual-date hidden>Aseta päivämäärä<input data-date type="date" disabled></label>
           <label>Loppusumma veroineen (€)<input data-amount type="text" inputmode="decimal" required placeholder="0,00"></label>
           <label>Summaan sisältyvä ALV (€)<input data-vat type="text" inputmode="decimal" placeholder="Ei tunnistettu – tarkista kuitista"></label>
           <label>Selite<textarea data-description rows="3" maxlength="250"></textarea></label>
@@ -166,6 +165,28 @@
         </form>
       </div>`;
     const $ = selector => dialog.querySelector(selector);
+    function updateDateMode(focus) {
+      const manual = $('[data-date-choice]').value === 'manual';
+      $('[data-manual-date]').hidden = !manual;
+      $('[data-date]').disabled = !manual;
+      $('[data-date]').required = manual;
+      if (manual && focus) $('[data-date]').focus();
+    }
+    function setDateOptions(dates) {
+      const select = $('[data-date-choice]');
+      select.replaceChildren();
+      select.add(new Option(dates.length ? 'Valitse ostopäivä' : 'Päivämäärää ei tunnistettu', ''));
+      dates.forEach(date => {
+        const [year, month, day] = date.split('-');
+        select.add(new Option(`${day}.${month}.${year}`, date));
+      });
+      select.add(new Option('Aseta päivämäärä', 'manual'));
+      select.value = dates.length === 1 ? dates[0] : '';
+      $('[data-date]').value = '';
+      updateDateMode(false);
+    }
+    setDateOptions([]);
+    $('[data-date-choice]').onchange = () => updateDateMode(true);
     let worker = null, imageUrl = null, generation = 0, busy = false;
     const banks = options.accounts.filter(a => Number(a.type) === 0 && /pankki|bank/i.test(a.name || '') && !/saamis|siirto|laina|luotto/i.test(a.name || ''));
     // Other accounts remain available for manually choosing the payment account.
@@ -213,7 +234,7 @@
       }
       const run = ++generation;
       setBusy(true);
-      $('[data-date]').value = '';
+      setDateOptions([]);
       $('[data-amount]').value = '';
       $('[data-vat]').value = '';
       $('[data-description]').value = '';
@@ -235,8 +256,6 @@
             const engine = await loadLibrary();
             if (run !== generation) return;
             const created = await engine.createWorker('fin+eng', 1, {
-              workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js',
-              corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0',
               logger: message => {
                 if (run !== generation) return;
                 $('[data-status]').textContent = message.status === 'recognizing text'
@@ -257,7 +276,7 @@
             const result = await created.recognize(canvas, { rotateAuto: true });
             if (run !== generation) return;
             const proposal = parse(result.data.text);
-            $('[data-date]').value = proposal.date;
+            setDateOptions(proposal.dates);
             $('[data-amount]').value = proposal.amount ? proposal.amount.toFixed(2).replace('.', ',') : '';
             $('[data-vat]').value = proposal.vatAmount == null ? '' : proposal.vatAmount.toFixed(2).replace('.', ',');
             $('[data-description]').value = proposal.description;
@@ -300,7 +319,7 @@
     $('[data-form]').onsubmit = event => {
       event.preventDefault();
       if (busy) return;
-      const date = $('[data-date]').value;
+      const date = $('[data-date-choice]').value === 'manual' ? $('[data-date]').value : $('[data-date-choice]').value;
       const amount = parseAmount($('[data-amount]').value);
       const vatText = $('[data-vat]').value.trim();
       const vatAmount = parseVatAmount(vatText);

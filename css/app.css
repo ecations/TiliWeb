@@ -20,6 +20,7 @@
 .receipt-ocr-drop small { display: block; margin-top: 8px; color: var(--text-muted); }
 .receipt-ocr-review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .receipt-ocr-review[hidden] { display: none; }
+.receipt-ocr-review [hidden] { display: none; }
 .receipt-ocr-image-wrap { position: sticky; top: 0; max-height: 72vh; overflow: auto; background: var(--bg); padding: 8px; }
 .receipt-ocr-image-wrap img { display: block; width: 100%; height: auto; }
 .receipt-ocr-review h3 { margin-top: 0; }

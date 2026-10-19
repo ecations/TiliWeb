@@ -45,7 +45,10 @@ test('calendar dates validated, including leap years and two-digit years', () =>
   assert.equal(parse('2026-10-18').date, '2026-10-18');
   assert.equal(parse('18.10.2026\n18.10.2026').date, '2026-10-18');
   assert.equal(parse('18.10.2026\n19.10.2026').date, '');
-  assert.equal(parse('18.10.2026\nEräpäivä 20.11.2026').date, '2026-10-18');
+  const choices = parse('18.10.2026\nEräpäivä 20.11.2026\n18.10.26\n31.2.2026');
+  assert.equal(choices.date, '');
+  assert.deepEqual(choices.dates, ['2026-10-18', '2026-11-20']);
+  assert.deepEqual(parse('Ei päivämäärää').dates, []);
 });
 test('total parsing avoids tax, subtotal, change, negative and conflicting totals', () => {
   assert.equal(parse('YHTEENSÄ\n1 234,56 EUR').amount, 1234.56);
