@@ -1,4 +1,11 @@
 /* Tilitin - Browser accounting app */
+#menuReports { max-height: calc(100vh - 140px); overflow-y: auto; }
+.panel-import-sql { width: 600px; }
+.panel-import-sql .panel-footer { align-items: center; }
+.import-complete { margin-right: auto; color: var(--debit); font-weight: 600; }
+.import-replace-option { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; cursor: pointer; }
+.import-replace-option input[type="checkbox"] { width: 22px; height: 22px; flex: 0 0 22px; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
+.import-replace-help { display: block; margin-top: 4px; font-size: .875rem; color: var(--text-muted); }
 .receipt-ocr-button { margin-left: auto; white-space: nowrap; }
 .receipt-ocr-dialog {
   width: min(1120px, 96vw); max-height: 94vh; overflow: auto;

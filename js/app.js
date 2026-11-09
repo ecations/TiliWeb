@@ -2326,6 +2326,18 @@
     document.getElementById('menuReportDocument').onclick = () => openReportDocument();
     document.getElementById('menuReportAccountStatement').onclick = () => openReportAccountStatement();
     document.getElementById('menuReportIncomeStatement').onclick = () => openReportIncomeStatement();
+    ['revenue', 'expenses', 'profit'].forEach(kind => {
+      document.getElementById('menuChart-' + kind).onclick = () => {
+        document.querySelectorAll('.menu-dropdown').forEach(menu => menu.classList.add('hidden'));
+        if (state.changed) { alert('Tallenna tositteen muutokset ennen kaavion avaamista.'); return; }
+        window.openMonthlyChart(kind);
+      };
+      document.getElementById('menuAnnualChart-' + kind).onclick = () => {
+        document.querySelectorAll('.menu-dropdown').forEach(menu => menu.classList.add('hidden'));
+        if (state.changed) { alert('Tallenna tositteen muutokset ennen kaavion avaamista.'); return; }
+        window.openAnnualChart(kind);
+      };
+    });
     document.getElementById('menuReportIncomeStatementDetailed').onclick = () => openReportIncomeStatementDetailed();
     document.getElementById('menuReportBalanceSheet').onclick = () => openReportBalanceSheet();
     document.getElementById('menuReportBalanceSheetDetailed').onclick = () => openReportBalanceSheetDetailed();

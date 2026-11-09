@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TiliWeb</title>
-  <link rel="stylesheet" href="css/app.css?v=2026-10-18-3">
+  <link rel="stylesheet" href="css/app.css?v=2026-11-09-3">
 </head>
 <body>
   <div class="app">
@@ -16,9 +16,6 @@
         <span id="appSubtitle" class="header-subtitle"></span>
       </div>
       <div class="header-menu-row">
-      <nav class="nav-tabs">
-        <button type="button" class="active">Tositteet</button>
-      </nav>
       <div class="menu-wrap">
         <button type="button" class="menu-trigger">Tiedosto</button>
         <div class="menu-dropdown hidden" id="menuFile">
@@ -71,6 +68,13 @@
           <button type="button" id="menuReportJournal" class="menu-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Päiväkirja</button>
           <button type="button" id="menuReportLedger" class="menu-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Pääkirja</button>
           <button type="button" id="menuReportVat" class="menu-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="9"/><circle cx="9" cy="9.5" r="0.5" fill="currentColor"/><circle cx="15" cy="14.5" r="0.5" fill="currentColor"/></svg>ALV-laskelma tileittäin</button>
+          <div class="sep"></div>
+          <button type="button" id="menuChart-revenue">Kaavio: liikevaihto kuukausittain</button>
+          <button type="button" id="menuChart-expenses">Kaavio: kulut kuukausittain</button>
+          <button type="button" id="menuChart-profit">Kaavio: tulos kuukausittain</button>
+          <button type="button" id="menuAnnualChart-revenue">Kaavio: liikevaihto vuosittain</button>
+          <button type="button" id="menuAnnualChart-expenses">Kaavio: kulut vuosittain</button>
+          <button type="button" id="menuAnnualChart-profit">Kaavio: voitto vuosittain</button>
           <div class="sep"></div>
           <button type="button" id="menuReportCoa" class="menu-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Tilikartta</button>
           <div class="sep"></div>
@@ -264,15 +268,16 @@
   <script src="js/vat-util.js?v=2026-02-28-46"></script>
   <script src="js/account-balances.js?v=2026-02-28-46"></script>
   <script src="js/data.js?v=2026-10-18-2"></script>
-  <script src="js/import-sql.js?v=2026-02-28-46"></script>
+  <script src="js/import-sql.js?v=2026-11-09-2"></script>
   <script src="js/tilitin-default-reports.js?v=2026-02-28-46"></script>
   <script src="js/export-sqlite.js?v=2026-02-28-46"></script>
   <script src="js/picker.js?v=2026-02-28-46"></script>
   <script src="js/panels.js?v=2026-02-28-46"></script>
-  <script src="js/reports.js?v=2026-02-28-46"></script>
+  <script src="js/monthly-charts.js?v=2026-11-09-2"></script>
+  <script src="js/reports.js?v=2026-11-09-2"></script>
   <div id="appLockedHint" class="app-locked-hint hidden" role="status" aria-live="polite"></div>
   <script src="js/receipt-ocr.js?v=2026-10-19-1"></script>
-  <script src="js/app.js?v=2026-10-18-2"></script>
+  <script src="js/app.js?v=2026-11-09-2"></script>
   <script>
     document.querySelectorAll('.menu-trigger').forEach(trigger => {
       trigger.addEventListener('click', (e) => {

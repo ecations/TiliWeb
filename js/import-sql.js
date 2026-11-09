@@ -124,7 +124,7 @@
         let j = 0;
         while (j < inner.length) {
           const rest = inner.slice(j).trimStart();
-          j += inner.length - rest.length;
+          j = inner.length - rest.length;
           if (!rest) break;
           let end = 0;
           if (rest.startsWith("'")) {
@@ -704,109 +704,72 @@
     container.innerHTML = '';
     const overlay = document.createElement('div');
     overlay.className = 'panel-overlay';
-    const bodyHtml = '<div class="panel">' +
+    overlay.innerHTML = '<div class="panel panel-import-sql">' +
       '<div class="panel-title">Tuo SQL-tiedosto</div>' +
       '<div class="panel-body">' +
-      '<p class="text-muted" style="font-size:0.9em;">Tuetut taulut: account/tili/accounts, period/tilikausi/periods, document_type/tositelaji, document/tosite/documents, entry/vienti/entries. Sarakkeet: id, number, name, type, period_id, document_id, amount_debit, amount_credit, jne.</p>' +
-      '<label class="form-group"><input type="checkbox" id="importReplace"> Korvaa nykyinen tietokanta (tyhjentää tilin ennen tuontia)</label>' +
-      '<div class="form-group">' +
-      '<label>SQL-teksti (INSERT-lauseet)</label> ' +
-      '<button type="button" class="btn btn-primary" id="importBtnTuo">Tuo</button>' +
-      '<p class="text-muted" style="font-size:0.85em; margin-top:4px;">Liitä SQL-teksti alle ja paina Tuo. Tiedosto tuodaan automaattisesti kun valitset .sqlite/.db-tiedoston.</p>' +
-      '</div>' +
-      '<div class="form-group"><textarea id="importSqlText" rows="10" style="width:100%; font-family:monospace; font-size:12px;" placeholder="INSERT INTO account ..."></textarea></div>' +
-      '<div class="form-group"><label>Tai valitse tiedosto</label><input type="file" id="importSqlFile" accept=".sql,.sqlite,.db,.db3,text/plain"></div>' +
-      '<p id="importReport" class="import-report"></p>' +
-      '</div>' +
-      '<div class="panel-footer"></div></div>';
-    overlay.innerHTML = bodyHtml;
-    const footer = overlay.querySelector('.panel-footer');
+      '<p>Valitse SQL-tiedosto tai Tilittimen SQLite-tietokanta (.sql, .sqlite, .db tai .db3). Tuonti alkaa tiedoston valinnan jälkeen.</p>' +
+      '<label class="import-replace-option"><input type="checkbox" id="importReplace">' +
+      '<span>Korvaa nykyinen tietokanta<span class="import-replace-help">Poistaa nykyiset kirjanpitotiedot ennen tuontia.</span></span></label>' +
+      '<div class="form-group"><label for="importSqlFile">Valitse tiedosto</label>' +
+      '<input type="file" id="importSqlFile" accept=".sql,.sqlite,.db,.db3,text/plain"></div>' +
+      '<p id="importReport" class="import-report" role="status" aria-live="polite"></p>' +
+      '</div><div class="panel-footer"><span class="import-complete" role="status" aria-live="polite"></span></div></div>';
+    const completeEl = overlay.querySelector('.import-complete');
     const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'btn';
     closeBtn.textContent = 'Sulje';
     closeBtn.onclick = () => overlay.remove();
-    const importBtn = overlay.querySelector('#importBtnTuo');
-    if (importBtn) {
-      importBtn.onclick = async function () {
-        const reportEl = overlay.querySelector('#importReport');
-        const replaceChk = overlay.querySelector('#importReplace');
-        const replace = replaceChk && replaceChk.checked;
-        const textarea = overlay.querySelector('#importSqlText');
-        let sql = (textarea && textarea.value) ? textarea.value.trim() : '';
-        if (!sql) {
-          reportEl.textContent = 'Liitä SQL-teksti yllä olevaan kenttään ja paina Tuo.';
-          reportEl.style.color = 'var(--danger, #c00)';
-          return;
-        }
-        reportEl.textContent = 'Tuodaan…';
-        reportEl.style.color = '';
-        try {
-          const report = await runImport(sql, { replaceExisting: replace });
-          let msg = 'Tuotu: ' + report.accounts + ' tiliä, ' + report.periods + ' tilikautta, ' + report.document_types + ' tositetyyppiä, ' + report.documents + ' tositetta, ' + report.entries + ' vientiä.';
-          if (report.errors.length) msg += ' Virheet: ' + report.errors.join('; ');
-          reportEl.textContent = msg;
-          reportEl.style.color = report.errors.length ? 'var(--danger, #c00)' : '';
-          if (report.accounts + report.periods + report.documents + report.entries > 0 && window.TilitinApp && window.TilitinApp.reloadDocuments) {
-            window.TilitinApp.reloadDocuments();
-          } else if (window.TilitinApp && window.TilitinApp.render) {
-            window.TilitinApp.render();
-          }
-        } catch (err) {
-          reportEl.textContent = 'Virhe: ' + (err.message || err);
-          reportEl.style.color = 'var(--danger, #c00)';
-        }
-      };
-    }
-    footer.appendChild(closeBtn);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
+    overlay.querySelector('.panel-footer').appendChild(closeBtn);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('.panel').addEventListener('click', e => e.stopPropagation());
     const fileInput = overlay.querySelector('#importSqlFile');
-    if (fileInput) fileInput.addEventListener('change', function (e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reportEl = overlay.querySelector('#importReport');
-      const replaceChk = overlay.querySelector('#importReplace');
-      const replace = replaceChk && replaceChk.checked;
-      const isSQLite = /\.(sqlite|db|db3)$/i.test(f.name);
-      if (isSQLite) {
-        reportEl.textContent = 'Tuodaan SQLite-tietokantaa…';
-        reportEl.style.color = '';
-        const r = new FileReader();
-        r.onload = async function () {
-          try {
-            const report = await importFromSQLite(r.result, {
-              replaceExisting: replace,
-              onProgress: function (kind, current) {
-                if (kind === 'documents') reportEl.textContent = 'Tuodaan tositteita ' + current + '…';
-                else if (kind === 'entries') reportEl.textContent = 'Tuodaan vientejä ' + current + '…';
-              }
-            });
-            let msg = 'Tuotu: ' + report.accounts + ' tiliä, ' + report.periods + ' tilikautta, ' + report.document_types + ' tositetyyppiä, ' + report.documents + ' tositetta, ' + report.entries + ' vientiä.';
-            if (report.errors.length) msg += ' Virheet: ' + report.errors.join('; ');
-            reportEl.textContent = msg;
-            reportEl.style.color = report.errors.length ? 'var(--danger, #c00)' : '';
-            if (report.accounts + report.periods + report.documents + report.entries > 0 && window.TilitinApp && window.TilitinApp.reloadDocuments) {
-              window.TilitinApp.reloadDocuments();
-            } else if (window.TilitinApp && window.TilitinApp.render) {
-              window.TilitinApp.render();
+    const replaceChk = overlay.querySelector('#importReplace');
+    const reportEl = overlay.querySelector('#importReport');
+    fileInput.addEventListener('change', async function () {
+      const file = fileInput.files[0];
+      if (!file) return;
+      completeEl.textContent = '';
+      const replace = replaceChk.checked;
+      const isSQLite = /\.(sqlite|db|db3)$/i.test(file.name);
+      fileInput.disabled = true;
+      replaceChk.disabled = true;
+      reportEl.textContent = isSQLite ? 'Tuodaan SQLite-tietokantaa…' : 'Tuodaan SQL-tiedostoa…';
+      reportEl.style.color = '';
+      try {
+        let report;
+        if (isSQLite) {
+          report = await importFromSQLite(await file.arrayBuffer(), {
+            replaceExisting: replace,
+            onProgress: function (kind, current) {
+              if (kind === 'documents') reportEl.textContent = 'Tuodaan tositteita ' + current + '…';
+              else if (kind === 'entries') reportEl.textContent = 'Tuodaan vientejä ' + current + '…';
             }
-          } catch (err) {
-            reportEl.textContent = 'Virhe: ' + (err.message || err);
-            reportEl.style.color = 'var(--danger, #c00)';
-          }
-        };
-        r.readAsArrayBuffer(f);
-        return;
-      }
-      const ta = overlay.querySelector('#importSqlText');
-      if (ta) {
-        const reader = new FileReader();
-        reader.onload = function () {
-          ta.value = reader.result;
-          const reportEl = overlay.querySelector('#importReport');
-          if (reportEl) reportEl.textContent = 'Tiedosto ladattu. Paina Tuo tuodaksesi.';
-        };
-        reader.readAsText(f, 'UTF-8');
+          });
+        } else {
+          const sql = (await file.text()).trim();
+          if (!sql) throw new Error('Valittu tiedosto on tyhjä. Valitse SQL- tai SQLite-tiedosto.');
+          report = await runImport(sql, { replaceExisting: replace });
+        }
+        let message = 'Tuotu: ' + report.accounts + ' tiliä, ' + report.periods + ' tilikautta, ' + report.document_types + ' tositetyyppiä, ' + report.documents + ' tositetta, ' + report.entries + ' vientiä.';
+        if (report.errors.length) message += ' Virheet: ' + report.errors.join('; ');
+        reportEl.textContent = message;
+        reportEl.style.color = report.errors.length ? 'var(--error, #c00)' : '';
+        if (report.accounts + report.periods + report.documents + report.entries > 0 && window.TilitinApp && window.TilitinApp.reloadDocuments) {
+          window.TilitinApp.reloadDocuments();
+        } else if (window.TilitinApp && window.TilitinApp.render) {
+          window.TilitinApp.render();
+        }
+        if (!report.errors.length && report.accounts + report.periods + report.document_types + report.documents + report.entries > 0) {
+          completeEl.textContent = 'Tuonti valmis, voit sulkea ikkunan.';
+        }
+      } catch (error) {
+        reportEl.textContent = 'Virhe: ' + (error.message || error);
+        reportEl.style.color = 'var(--error, #c00)';
+      } finally {
+        fileInput.disabled = false;
+        replaceChk.disabled = false;
+        fileInput.value = '';
       }
     });
     container.appendChild(overlay);

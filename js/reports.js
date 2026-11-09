@@ -45,7 +45,7 @@
     return String(window.location.href || '').replace(/\/[^/]*$/, '/');
   }
 
-  function openReportPopup(title, bodyHtml) {
+  function openReportPopup(title, bodyHtml, printWhenReady) {
     const base = _reportBaseUrl();
     const w = window.open('', '_blank');
     if (!w) {
@@ -66,6 +66,7 @@
       '<div class="report-view">' + bodyHtml + '</div>' +
       '</body></html>'
     );
+    if (printWhenReady) w.addEventListener('load', () => w.print(), { once: true });
     w.document.close();
     try { w.focus(); } catch (_) {}
     return true;
@@ -111,7 +112,7 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('.panel').addEventListener('click', (e) => e.stopPropagation());
     overlay.querySelector('#btnCloseReport').onclick = () => overlay.remove();
-    overlay.querySelector('#btnPrintReport').onclick = () => window.print();
+    overlay.querySelector('#btnPrintReport').onclick = () => opts.printInPopup ? openReportPopup(title, html, true) : window.print();
     overlay.querySelector('#btnOpenPopupReport').onclick = () => openReportPopup(title, html);
     if (opts.csvContent) {
       overlay.querySelector('#btnSaveReportCsv').onclick = function () {
@@ -1400,6 +1401,33 @@
 
     showReportInPanel('Tiliote – ' + account.number, html, { csvContent: csvContent, csvFilename: csvFilename });
   }
+
+  window.openAnnualChart = function (kind) {
+    const periods = getPeriods();
+    if (!periods.length) { alert('Lisää ensin tilikausi.'); return; }
+    const title = MonthlyCharts.annualTitles[kind];
+    if (!title) return;
+    const rows = MonthlyCharts.collectAnnual(periods, id => getDocuments(id, null), getEntriesByDocument,
+      accForPeriod, getStartingBalances);
+    const html = '<h2>' + title + '</h2><p>' + MonthlyCharts.escape(getSettings().name || '') + '</p>' +
+      '<p>Kaikki tilikaudet · yksi pylväs tilikautta kohti</p>' + MonthlyCharts.render(rows, kind, true) +
+      '<p style="font-size:12px">Mukana kaikkien tositelajien tallennetut tositteet sekä tuotto- ja kulutilien alkusaldot, kuten tuloslaskelmassa. Liikevaihto sisältää tuottotilit (kuten ohjelman yhteenvedossa), kulut kulutilit ja voitto niiden erotuksen. Tappio näkyy negatiivisena. Summat ovat kirjattuja nettosummia. Eripituisia tilikausia ei muuteta 12 kuukauden mittaisiksi; tarkat päivämäärät näkyvät taulukossa. Keskeneräinen tilikausi sisältää tähän mennessä tallennetut kirjaukset.</p>';
+    showReportInPanel(title, html, { printInPopup: true });
+  };
+
+  window.openMonthlyChart = function (kind) {
+    const period = getPeriod();
+    if (!period) { alert('Valitse tilikausi.'); return; }
+    const title = MonthlyCharts.titles[kind];
+    if (!title) return;
+    const months = MonthlyCharts.collect(period, getDocuments(period.id, null), getEntriesByDocument,
+      id => accForPeriod(id, period.id));
+    const html = '<h2>' + title + '</h2><p>' + MonthlyCharts.escape(getSettings().name || '') + '</p>' +
+      '<p>Tilikausi: ' + formatDate(period.startDate) + ' – ' + formatDate(period.endDate) + '</p>' +
+      MonthlyCharts.render(months, kind) +
+      '<p style="font-size:12px">Laskenta tallennetuista tositteista kaikista tositelajeista, tositteen päivämäärän mukaan. Liikevaihto sisältää tuottotilit (kuten ohjelman yhteenvedossa), kulut kulutilit ja tulos niiden erotuksen. Summat ovat kirjattuja nettosummia; erillisiä ALV-vientejä ei lisätä niihin. Alkusaldoja ei kohdisteta kuukausille.</p>';
+    showReportInPanel(title, html, { printInPopup: true });
+  };
 
   window.openReportIncomeStatement = function () {
     const period = getPeriod();
